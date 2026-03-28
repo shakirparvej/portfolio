@@ -19,10 +19,18 @@ const db = getFirestore(app);
 console.log("App started");
 
 let state = {
-  name: "Your Name",
-  bio: "Portfolio loading...",
-  links: {},
-  sections: []
+  name: "Shakir Parvej",
+  bio: "Software Engineer | Full Stack Developer specializing in high-performance web applications and cloud architecture.",
+  links: {
+    "GitHub": "https://github.com/",
+    "LinkedIn": "https://linkedin.com/in/",
+    "Email": "mailto:shakir@example.com"
+  },
+  sections: [
+    { title: "Experience", content: "Senior Developer with 5+ years of experience building scalable systems.", visible: true },
+    { title: "Skills", content: "React, Node.js, Firebase, Tailwind CSS, PostgreSQL, Cloud Architecture.", visible: true },
+    { title: "Education", content: "Bachelor of Computer Science - Graduate with Honors.", visible: true }
+  ]
 };
 
 async function loadData(){
@@ -47,31 +55,37 @@ function render(){
   const sections = state.sections || [];
 
   el.innerHTML = `
-    <div class="space-y-2">
-      <h1 class="text-4xl font-bold tracking-tight">${state.name || "Portfolio"}</h1>
-      <p class="text-gray-400">${state.bio || ""}</p>
-    </div>
+    <header class="pb-8 border-b border-white/10 mb-8">
+      <h1 class="text-5xl font-extrabold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent tracking-tighter">${state.name || "Portfolio"}</h1>
+      <p class="text-xl text-gray-400 mt-4 leading-relaxed max-w-2xl">${state.bio || ""}</p>
 
-    ${Object.keys(links).length > 0 ? `
-    <div class="flex flex-wrap gap-3 mt-3">
-      ${Object.entries(links).map(([k,v])=> v? `<a href="${v}" target="_blank" class="px-3 py-1 border border-cyan-400/30 rounded-full text-sm hover:bg-cyan-400/10">${k}</a>`:"").join("")}
-    </div>
-    ` : ""}
+      ${Object.keys(links).length > 0 ? `
+      <div class="flex flex-wrap gap-4 mt-8">
+        ${Object.entries(links).map(([k,v])=> v? `
+          <a href="${v}" target="_blank" class="glass px-5 py-2 rounded-full text-sm font-medium hover:bg-cyan-500/10 hover:border-cyan-500/50 transition-all">
+            ${k}
+          </a>`:"").join("")}
+      </div>
+      ` : ""}
+    </header>
 
-    <div class="grid gap-6 mt-6">
+    <main class="grid gap-8">
       ${sections.filter(s=>s.visible!==false).map(s=>`
-        <div class="glass p-6 rounded-2xl">
-          <h2 class="text-lg font-semibold text-cyan-400">${s.title}</h2>
-          <p class="text-gray-300 mt-2 leading-relaxed">${s.content}</p>
+        <div class="glass p-8 rounded-3xl group transition-all duration-500">
+          <div class="flex items-center gap-4 mb-4">
+             <div class="h-1 w-8 bg-cyan-500 rounded-full group-hover:w-12 transition-all"></div>
+             <h2 class="text-2xl font-bold text-white/90">${s.title}</h2>
+          </div>
+          <p class="text-gray-400 text-lg leading-relaxed">${s.content}</p>
         </div>
       `).join("")}
-    </div>
 
-    ${sections.length === 0 ? `
-      <div class="p-8 border border-dashed border-white/10 rounded-2xl text-center text-gray-500">
-        Portfolio is loading or not configured yet
-      </div>
-    ` : ""}
+      ${sections.length === 0 ? `
+        <div class="p-16 border-2 border-dashed border-white/5 rounded-3xl text-center">
+          <p class="text-gray-500 text-lg">Your professional story starts here. Add your first section from the admin panel.</p>
+        </div>
+      ` : ""}
+    </main>
   `;
 }
 
@@ -84,36 +98,48 @@ function renderAdmin(){
   const sections = state.sections || [];
 
   ed.innerHTML = `
-    <input id="name" value="${name}" class="text-black w-full p-2" placeholder="Full Name"/>
-    <textarea id="bio" class="text-black w-full p-2" placeholder="Bio">${bio}</textarea>
-
-    <h3 class="text-lg">Links</h3>
-    ${Object.entries(links).map(([k,v])=>`
-      <div class="flex gap-2">
-        <input value="${k}" class="key text-black p-1"/>
-        <input value="${v}" class="val text-black p-1 flex-1"/>
+    <div class="space-y-6">
+      <div class="grid gap-4">
+        <label class="text-cyan-400 font-bold uppercase text-xs tracking-widest">Basic Information</label>
+        <input id="name" value="${name}" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-cyan-500/50 transition-all" placeholder="Full Name"/>
+        <textarea id="bio" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white h-32 focus:outline-none focus:border-cyan-500/50 transition-all" placeholder="Bio">${bio}</textarea>
       </div>
-    `).join("")}
 
-    <button onclick="addLink()" class="bg-blue-500 p-2 rounded">+ Link</button>
-
-    <h3 class="text-lg mt-4">Sections</h3>
-    ${sections.map((s,i)=>`
-      <div class="border p-3 rounded mb-2">
-        <input value="${s.title}" class="title text-black w-full mb-1"/>
-        <textarea class="content text-black w-full">${s.content}</textarea>
-
-        <div class="flex items-center gap-3 mt-2">
-          <label>Visible <input type="checkbox" ${s.visible!==false?"checked":""} class="visible"/></label>
-          <button onclick="moveUp(${i})">↑</button>
-          <button onclick="moveDown(${i})">↓</button>
-          <button onclick="removeSection(${i})" class="text-red-500">Delete</button>
-        </div>
+      <div class="grid gap-4">
+        <label class="text-cyan-400 font-bold uppercase text-xs tracking-widest">Connect Links</label>
+        ${Object.entries(links).map(([k,v])=>`
+          <div class="flex gap-2">
+            <input value="${k}" class="key w-1/3 bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-500/50 transition-all" placeholder="Label"/>
+            <input value="${v}" class="val flex-1 bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-500/50 transition-all" placeholder="URL"/>
+          </div>
+        `).join("")}
+        <button onclick="addLink()" class="w-max px-4 py-2 border border-cyan-500/30 rounded-lg text-cyan-400 text-sm hover:bg-cyan-500/10 transition-all">+ Add Link</button>
       </div>
-    `).join("")}
 
-    <button onclick="addSection()" class="bg-blue-500 p-2 rounded">+ Section</button>
-    <button onclick="saveData()" class="bg-green-500 p-2 rounded">Save</button>
+      <div class="grid gap-4">
+        <label class="text-cyan-400 font-bold uppercase text-xs tracking-widest">Content Sections</label>
+        ${sections.map((s,i)=>`
+          <div class="bg-white/5 border border-white/10 p-6 rounded-2xl relative group">
+            <input value="${s.title}" class="title w-full bg-transparent text-xl font-bold text-white mb-2 focus:outline-none" placeholder="Section Title"/>
+            <textarea class="content w-full bg-transparent text-gray-400 h-24 focus:outline-none resize-none" placeholder="Section Content">${s.content}</textarea>
+
+            <div class="flex items-center justify-between mt-4 pt-4 border-t border-white/5">
+              <label class="flex items-center gap-2 text-sm text-gray-500 cursor-pointer">
+                <input type="checkbox" ${s.visible!==false?"checked":""} class="visible accent-cyan-500"/> Visible
+              </label>
+              <div class="flex gap-2">
+                <button onclick="moveUp(${i})" class="p-2 hover:bg-white/5 rounded-lg transition-all">↑</button>
+                <button onclick="moveDown(${i})" class="p-2 hover:bg-white/5 rounded-lg transition-all">↓</button>
+                <button onclick="removeSection(${i})" class="p-2 hover:bg-red-500/10 text-red-500 rounded-lg transition-all">Delete</button>
+              </div>
+            </div>
+          </div>
+        `).join("")}
+        <button onclick="addSection()" class="w-full py-4 border-2 border-dashed border-white/10 rounded-2xl text-gray-500 hover:border-cyan-500/30 hover:text-cyan-400 transition-all">+ Add New Section</button>
+      </div>
+
+      <button onclick="saveData()" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 py-4 rounded-2xl font-bold text-lg hover:shadow-[0_0_30px_rgba(6,182,212,0.3)] transition-all">Save Changes</button>
+    </div>
   `;
 }
 
@@ -125,26 +151,38 @@ window.moveUp = (i) => { if (i > 0) { [state.sections[i - 1], state.sections[i]]
 window.moveDown = (i) => { if (i < state.sections.length - 1) { [state.sections[i + 1], state.sections[i]] = [state.sections[i], state.sections[i + 1]]; renderAdmin(); } }
 
 window.saveData = async () => {
-  state.name = document.getElementById("name").value;
-  state.bio = document.getElementById("bio").value;
+  try {
+    console.log("Attempting to save state:", state);
 
-  const keys = document.querySelectorAll(".key");
-  const vals = document.querySelectorAll(".val");
-  state.links = {};
-  keys.forEach((k, i) => state.links[k.value] = vals[i].value);
+    state.name = document.getElementById("name").value;
+    state.bio = document.getElementById("bio").value;
 
-  const titles = document.querySelectorAll(".title");
-  const contents = document.querySelectorAll(".content");
-  const visibles = document.querySelectorAll(".visible");
+    const keys = document.querySelectorAll(".key");
+    const vals = document.querySelectorAll(".val");
+    state.links = {};
+    keys.forEach((k, i) => {
+      if(k.value) state.links[k.value] = vals[i].value;
+    });
 
-  state.sections = [];
-  titles.forEach((t, i) => {
-    state.sections.push({ title: t.value, content: contents[i].value, visible: visibles[i].checked });
-  });
+    const titles = document.querySelectorAll(".title");
+    const contents = document.querySelectorAll(".content");
+    const visibles = document.querySelectorAll(".visible");
 
-  await setDoc(doc(db, "portfolio", "main"), state);
-  alert("Saved");
-  render();
+    state.sections = [];
+    titles.forEach((t, i) => {
+      if(t.value){
+        state.sections.push({ title: t.value, content: contents[i].value, visible: visibles[i].checked });
+      }
+    });
+
+    await setDoc(doc(db, "portfolio", "main"), state);
+    console.log("Save successful");
+    alert("Saved Successfully!");
+    render();
+  } catch (error) {
+    console.error("Save Error:", error);
+    alert("Save Failed: " + error.message + "\nCheck console for details.");
+  }
 }
 
 window.checkPass = () => {
