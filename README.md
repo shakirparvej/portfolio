@@ -1,0 +1,1 @@
+Premium UI version. Setup Firebase config and deploy via Vercel.
