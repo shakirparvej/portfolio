@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const HASHED_PASSWORD = "5e884898da28047151d0e56f8dc6292773603d0d6aabbddc3b6f3d6f6a6c6b8";
+const PASSWORD = "admin123";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCS488771dGxCZujO5GdLb4GQ__koM215Q",
@@ -147,19 +147,15 @@ window.saveData = async () => {
   render();
 }
 
-async function hash(val) {
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(val));
-  return [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2, "0")).join("");
-}
-
-window.checkPass = async () => {
+window.checkPass = () => {
   const val = document.getElementById("adminPass").value;
-  const h = await hash(val);
-  if (h === HASHED_PASSWORD) {
+  if (val === PASSWORD) {
     sessionStorage.setItem("admin", "true");
     unlock();
-  } else alert("Wrong");
-}
+  } else {
+    alert("Wrong");
+  }
+};
 
 function unlock() {
   document.getElementById("adminContent").classList.remove("hidden");
