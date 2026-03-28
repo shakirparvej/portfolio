@@ -183,6 +183,11 @@ window.saveData = async () => {
     await setDoc(doc(db, "portfolio", "main"), state);
     console.log("Save successful");
     alert("Saved Successfully!");
+    
+    // Automatically close admin panel and return to portfolio
+    document.getElementById("adminPanel").classList.add("hidden");
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
     render();
   } catch (error) {
     console.error("Save Error:", error);
