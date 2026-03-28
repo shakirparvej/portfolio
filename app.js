@@ -99,6 +99,11 @@ function renderAdmin(){
 
   ed.innerHTML = `
     <div class="space-y-6">
+      <div class="flex items-center justify-between pb-6 border-b border-white/10 mb-6 sticky top-0 bg-black/95 z-10">
+        <h2 class="text-2xl font-bold text-white">Admin Control Panel</h2>
+        <button onclick="document.getElementById('adminPanel').classList.add('hidden')" class="px-6 py-2 border border-white/20 rounded-xl text-sm hover:bg-white/5 transition-all">← Back to Portfolio</button>
+      </div>
+
       <div class="grid gap-4">
         <label class="text-cyan-400 font-bold uppercase text-xs tracking-widest">Basic Information</label>
         <input id="name" value="${name}" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-cyan-500/50 transition-all" placeholder="Full Name"/>
