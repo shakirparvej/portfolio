@@ -87,21 +87,29 @@ function initFirebase() {
 }
 
 async function loadState() {
+    // 1. Load Local Immediately
     const local = localStorage.getItem(VERSION);
     if (local) state = JSON.parse(local);
 
-    if (db) {
-        try {
-            const doc = await db.collection('portfolio').doc('main').get();
-            if (doc.exists) {
-                state = doc.data();
-                localStorage.setItem(VERSION, JSON.stringify(state));
-            }
-        } catch (e) { console.warn("Cloud Load Failed"); }
-    }
-
     const isAdmin = window.location.pathname.includes('admin.html');
-    isAdmin ? initAdmin() : renderMain();
+    if (!isAdmin) renderMain(); 
+    else initAdmin();
+
+    // 2. Background Cloud Sync
+    if (db) {
+        db.collection('portfolio').doc('main').get()
+            .then(doc => {
+                if (doc.exists) {
+                    state = doc.data();
+                    localStorage.setItem(VERSION, JSON.stringify(state));
+                    if (!isAdmin) renderMain(); // Rerender with fresh cloud data
+                }
+            })
+            .catch(e => {
+                console.warn("Cloud Sync Unavailable (Likely Permissions):", e);
+                // Fallback: Site is already rendered from local/default
+            });
+    }
 }
 
 // --- Main Engine ---
