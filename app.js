@@ -127,10 +127,42 @@ async function loadState() {
 }
 
 function getAsset(url, type = 'avatar') {
-    if (url && url.length > 5) return url;
-    if (type === 'avatar') return `https://ui-avatars.com/api/?name=${encodeURIComponent(state.profile.name)}&background=06b6d4&color=fff&size=512`;
-    return 'https://via.placeholder.com/600x400';
+    if (url && url.length > 5 && !url.includes('via.placeholder')) return url;
+    if (type === 'avatar') return `https://ui-avatars.com/api/?name=${encodeURIComponent(state.profile?.name || 'User')}&background=06b6d4&color=fff&size=512`;
+    return 'https://placehold.co/600x400/050505/06b6d4?text=Medical+Doc';
 }
+
+// --- Diagnostic Tool ---
+window.checkSyncHealth = async () => {
+    const btn = document.getElementById('health-btn');
+    const originalText = btn.innerText;
+    btn.innerText = "TESTING...";
+    
+    try {
+        let report = "SYSTEM STATUS:\n";
+        
+        // 1. Firestore Test
+        if (db) {
+            await db.collection('_health_').doc('test').set({ time: Date.now() });
+            report += "✅ FIRESTORE: Connected & Writeable\n";
+        } else report += "❌ FIRESTORE: Not Initialized\n";
+        
+        // 2. Storage Test
+        if (storage) {
+            const ref = storage.ref().child('_health_test_.txt');
+            await ref.putString("health check");
+            report += "✅ STORAGE: Connected & Writeable\n";
+            await ref.delete();
+        } else report += "❌ STORAGE: Not Initialized\n";
+        
+        alert(report);
+    } catch (e) {
+        console.error("Health Check Failed:", e);
+        alert(`❌ STATUS: CONNECTION PARTIAL/FAILED\nError: ${e.message}\n\nTIP: Check Firebase Rules for both Firestore and Storage.`);
+    } finally {
+        btn.innerText = originalText;
+    }
+};
 
 // --- Main Engine ---
 function renderMain() {
@@ -202,7 +234,7 @@ function renderMain() {
     inject('certificates-grid', state.certificates || [], cert => `
         <div class="glass-card p-4 rounded-2xl group cursor-pointer hover:border-cyan-500/40 transition-all">
             <div class="aspect-video rounded-xl overflow-hidden mb-4 border border-white/5 relative">
-                <img src="${getAsset(cert.image, 'cert')}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/600x400'">
+                <img src="${getAsset(cert.image, 'cert')}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/600x400/050505/06b6d4?text=Doc'">
                 <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                     <i data-lucide="zoom-in" class="h-6 w-6 text-white"></i>
                 </div>
@@ -306,34 +338,41 @@ function initAdmin() {
     window.setupUpload = (id, statePath, previewId) => {
         const el = document.getElementById(id);
         if (!el) return;
-        el.onchange = async (e) => {
+        el.onchange = (e) => {
             const file = e.target.files[0];
             if (!file) return;
             const statusLabel = document.createElement('span');
-            statusLabel.className = 'absolute top-0 right-0 p-1 text-[8px] bg-cyan-500 text-white animate-pulse';
-            statusLabel.innerText = "SYNCING...";
+            statusLabel.className = 'absolute top-0 right-0 p-1 text-[8px] bg-cyan-500 text-white animate-pulse z-20';
+            statusLabel.innerText = "SYNCING (0%)...";
             el.parentElement.appendChild(statusLabel);
 
             if (storage) {
-                try {
-                    const ref = storage.ref().child(`${statePath}/${Date.now()}_${file.name}`);
-                    await ref.put(file);
-                    const url = await ref.getDownloadURL();
-                    
-                    const keys = statePath.split('.');
-                    let current = state;
-                    for (let i = 0; i < keys.length - 1; i++) current = current[keys[i]];
-                    current[keys[keys.length - 1]] = url;
-                    
-                    if (previewId) document.getElementById(previewId).src = url;
-                    statusLabel.innerText = "SYNCED!";
-                    setTimeout(() => statusLabel.remove(), 2000);
-                } catch (err) {
-                    console.error("Upload Failed:", err);
-                    statusLabel.innerText = "ERROR!";
-                    statusLabel.classList.replace('bg-cyan-500', 'bg-red-500');
-                    setTimeout(() => statusLabel.remove(), 5000);
-                }
+                const ref = storage.ref().child(`${statePath}/${Date.now()}_${file.name}`);
+                const task = ref.put(file);
+                
+                task.on('state_changed', 
+                    (snapshot) => {
+                        const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+                        statusLabel.innerText = `SYNCING (${progress}%)...`;
+                    },
+                    (error) => {
+                        console.error("Upload Error:", error);
+                        statusLabel.innerText = error.code === 'storage/unauthorized' ? "RULES DENIED" : "SYNC ERROR";
+                        statusLabel.classList.replace('bg-cyan-500', 'bg-red-500');
+                        setTimeout(() => statusLabel.remove(), 5000);
+                    },
+                    async () => {
+                        const url = await task.snapshot.ref.getDownloadURL();
+                        const keys = statePath.split('.');
+                        let current = state;
+                        for (let i = 0; i < keys.length - 1; i++) current = current[keys[i]];
+                        current[keys[keys.length - 1]] = url;
+                        if (previewId) document.getElementById(previewId).src = url;
+                        statusLabel.innerText = "CLOUDSYNC OK!";
+                        statusLabel.classList.replace('animate-pulse', 'shadow-lg');
+                        setTimeout(() => statusLabel.remove(), 2000);
+                    }
+                );
             } else {
                 const reader = new FileReader();
                 reader.onload = (re) => {
@@ -342,7 +381,7 @@ function initAdmin() {
                     for (let i = 0; i < keys.length - 1; i++) current = current[keys[i]];
                     current[keys[keys.length - 1]] = re.target.result;
                     if (previewId) document.getElementById(previewId).src = re.target.result;
-                    statusLabel.innerText = "LOADED!";
+                    statusLabel.innerText = "LOCAL CACHED";
                     setTimeout(() => statusLabel.remove(), 2000);
                 };
                 reader.readAsDataURL(file);
@@ -415,10 +454,10 @@ function renderCertificatesEditor() {
     const container = document.getElementById('certificates-editor-list');
     if (!container) return;
     container.innerHTML = state.certificates.map((cert, index) => `
-        <div class="glass-card p-4 rounded-xl space-y-3 group">
+        <div class="glass-card p-4 rounded-xl space-y-3 group relative">
             <div class="relative aspect-video rounded-lg overflow-hidden bg-black/40 border border-white/5">
                 <img id="cert-preview-${index}" src="${getAsset(cert.image, 'cert')}" class="w-full h-full object-cover">
-                <label class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                <label id="cert-label-${index}" class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                     <i data-lucide="camera" class="h-4 w-4 mb-1"></i>
                     <span class="text-[8px] uppercase font-bold">Update Doc</span>
                     <input type="file" onchange="uploadCert(${index}, this)" class="hidden" accept="image/*">
@@ -432,23 +471,35 @@ function renderCertificatesEditor() {
     lucide.createIcons();
 }
 
-window.uploadCert = async (index, input) => {
+window.uploadCert = (index, input) => {
     const file = input.files[0];
     if (!file) return;
+    const label = document.getElementById(`cert-label-${index}`);
+    const status = document.createElement('div');
+    status.className = 'absolute inset-0 bg-cyan-500/80 flex items-center justify-center text-[10px] font-bold text-white z-30';
+    status.innerText = "0%";
+    label.parentElement.appendChild(status);
+
     if (storage) {
-        try {
-            const ref = storage.ref().child(`certificates/${Date.now()}_${file.name}`);
-            await ref.put(file);
-            const url = await ref.getDownloadURL();
-            state.certificates[index].image = url;
-            document.getElementById(`cert-preview-${index}`).src = url;
-            alert("Certificate Synced!");
-        } catch (e) { alert("Upload Failed."); }
+        const ref = storage.ref().child(`certificates/${Date.now()}_${file.name}`);
+        const task = ref.put(file);
+        task.on('state_changed',
+            (snap) => { status.innerText = Math.round((snap.bytesTransferred/snap.totalBytes)*100) + "%"; },
+            (err) => { status.innerText = "FAIL"; status.classList.replace('bg-cyan-500/80', 'bg-red-500/80'); setTimeout(()=>status.remove(), 3000); },
+            async () => {
+                const url = await task.snapshot.ref.getDownloadURL();
+                state.certificates[index].image = url;
+                document.getElementById(`cert-preview-${index}`).src = url;
+                status.innerText = "READY";
+                setTimeout(()=>status.remove(), 2000);
+            }
+        );
     } else {
         const reader = new FileReader();
         reader.onload = (re) => {
             state.certificates[index].image = re.target.result;
             document.getElementById(`cert-preview-${index}`).src = re.target.result;
+            status.remove();
         };
         reader.readAsDataURL(file);
     }
