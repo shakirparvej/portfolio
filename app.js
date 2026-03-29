@@ -20,7 +20,7 @@ const DEFAULT_DATA = {
         title: "ICU & EMERGENCY PHYSICIAN | HEALTHCARE AI ARCHITECT",
         location: "Noida Sector 62 | Rajasthan",
         bio: "Forward-thinking medical professional specializing in intensive care. Building the future of tech-driven healthcare with Python and Rust.",
-        photo: "https://ui-avatars.com/api/?name=Shakir+Parvej&background=06b6d4&color=fff&size=512",
+        photo: "", // Initialized empty for avatar fallback
         education: "MBBS, GMC Kota, India (2023)",
         languages: "English, Hindi, Urdu, Arabic",
         resumeUrl: "#",
@@ -45,7 +45,7 @@ const DEFAULT_DATA = {
         { level: "Advanced", tools: "ICD-11, SNOMED, LOINC" }
     ],
     certificates: [
-        { id: 1, title: "Critical Care Basic", issuer: "ICMR", image: "https://via.placeholder.com/600x400/06b6d4/ffffff?text=Certificate" }
+        { id: 1, title: "Critical Care Basic", issuer: "ICMR", image: "" }
     ],
     interests: ["Bird Watching", "AI Research"],
     contact: {
@@ -122,8 +122,14 @@ async function loadState() {
                     if (!isAdmin) renderMain(); 
                 }
             })
-            .catch(e => console.warn("Cloud Sync Error:", e));
+            .catch(e => console.warn("Cloud Sync Error (Likely Rules):", e));
     }
+}
+
+function getAsset(url, type = 'avatar') {
+    if (url && url.length > 5) return url;
+    if (type === 'avatar') return `https://ui-avatars.com/api/?name=${encodeURIComponent(state.profile.name)}&background=06b6d4&color=fff&size=512`;
+    return 'https://via.placeholder.com/600x400';
 }
 
 // --- Main Engine ---
@@ -131,7 +137,7 @@ function renderMain() {
     const isAdmin = window.location.pathname.includes('admin.html');
     if (isAdmin) return;
 
-    // Immediately hide loader on first render attempt
+    // Loader hide
     const loader = document.getElementById('loader');
     if (loader) {
         loader.style.opacity = '0';
@@ -145,7 +151,7 @@ function renderMain() {
 
     safeSet('logo', state.profile?.logoText);
     
-    // Visibility Filters
+    // Visibility
     if (state.sections) {
         Object.keys(state.sections).forEach(id => {
             const el = document.getElementById(id);
@@ -153,7 +159,7 @@ function renderMain() {
         });
     }
 
-    // Content
+    // Hero
     const profile = state.profile || {};
     const nameParts = (profile.name || "").split(' ');
     const first = nameParts.slice(0, 2).join(' ');
@@ -163,7 +169,7 @@ function renderMain() {
 
     safeSet('hero-title-desc', profile.title);
     safeSet('hero-location', profile.location);
-    safeSet('profile-img', profile.photo, 'src');
+    safeSet('profile-img', getAsset(profile.photo), 'src');
     safeSet('about-bio', profile.bio);
     safeSet('about-edu', profile.education);
 
@@ -174,8 +180,8 @@ function renderMain() {
     };
 
     inject('experience-list', state.experience, exp => `
-        <div class="relative pl-10 pb-10 group">
-            <div class="absolute left-[-2px] top-1.5 w-3 h-3 rounded-full border border-cyan-500 bg-[#050505] z-10 group-hover:bg-cyan-500"></div>
+        <div class="relative pl-12 pb-10 group">
+            <div class="absolute left-[13px] top-1.5 w-3.5 h-3.5 rounded-full border-2 border-cyan-500 bg-[#050505] z-10 group-hover:bg-cyan-500 transition-all shadow-[0_0_10px_rgba(6,182,212,0.3)]"></div>
             <p class="text-[10px] font-bold text-cyan-500/60 uppercase tracking-widest">${exp.year}</p>
             <h4 class="text-xl font-bold group-hover:text-cyan-400 transition-colors">${exp.role}</h4>
             <p class="text-xs text-gray-400 opacity-60">${exp.company}</p>
@@ -196,7 +202,7 @@ function renderMain() {
     inject('certificates-grid', state.certificates || [], cert => `
         <div class="glass-card p-4 rounded-2xl group cursor-pointer hover:border-cyan-500/40 transition-all">
             <div class="aspect-video rounded-xl overflow-hidden mb-4 border border-white/5 relative">
-                <img src="${cert.image}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/600x400'">
+                <img src="${getAsset(cert.image, 'cert')}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/600x400'">
                 <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                     <i data-lucide="zoom-in" class="h-6 w-6 text-white"></i>
                 </div>
@@ -229,22 +235,20 @@ function renderMain() {
 window.generateResumePDF = async () => {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    const primaryColor = [6, 182, 212]; // Cyan-500
+    const primaryColor = [6, 182, 212];
     
-    // Helper: Header
     doc.setFillColor(5, 5, 5);
-    doc.rect(0, 0, 210, 40, 'F');
+    doc.rect(0, 0, 210, 45, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(24);
     doc.setFont("helvetica", "bold");
-    doc.text(state.profile.name, 20, 20);
-    doc.setFontSize(10);
+    doc.text(state.profile.name, 20, 22);
+    doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    doc.text(`${state.profile.title} | ${state.profile.location}`, 20, 28);
-    doc.text(`${state.contact.email} | ${state.contact.phone}`, 20, 34);
+    doc.text(`${state.profile.title} | ${state.profile.location}`, 20, 30);
+    doc.text(`${state.contact.email} | ${state.contact.phone}`, 20, 36);
 
-    let y = 50;
-
+    let y = 55;
     const addSection = (title, items, renderFn) => {
         if (!items || items.length === 0) return;
         doc.setTextColor(...primaryColor);
@@ -255,45 +259,37 @@ window.generateResumePDF = async () => {
         doc.setDrawColor(...primaryColor);
         doc.line(20, y, 190, y);
         y += 8;
-        
         doc.setTextColor(60, 60, 60);
         doc.setFontSize(10);
         doc.setFont("helvetica", "normal");
-        
-        items.forEach(item => {
-            if (y > 270) { doc.addPage(); y = 20; }
-            y = renderFn(item, y);
-        });
+        items.forEach(item => { if (y > 270) { doc.addPage(); y = 20; } y = renderFn(item, y); });
         y += 10;
     };
 
-    addSection("Professional Experience", state.experience, (exp, currY) => {
+    addSection("Experience", state.experience, (exp, currY) => {
         doc.setFont("helvetica", "bold");
-        doc.text(`${exp.role} - ${exp.company}`, 20, currY);
+        doc.text(`${exp.role} @ ${exp.company}`, 20, currY);
         doc.setFont("helvetica", "italic");
         doc.text(exp.year, 190, currY, { align: 'right' });
         currY += 5;
         doc.setFont("helvetica", "normal");
         const lines = doc.splitTextToSize(exp.desc, 160);
         doc.text(lines, 25, currY);
-        return currY + (lines.length * 5) + 5;
+        return currY + (lines.length * 5) + 4;
     });
 
-    addSection("Education", [{ edu: state.profile.education }], (item, currY) => {
-        doc.text(item.edu, 20, currY);
-        return currY + 6;
-    });
-
-    addSection("Competencies", state.competencies, (comp, currY) => {
+    addSection("Core Competencies", state.competencies, (comp, currY) => {
         doc.setFont("helvetica", "bold");
         doc.text(`${comp.category}:`, 20, currY);
         doc.setFont("helvetica", "normal");
-        doc.text(comp.items, 55, currY);
+        doc.text(comp.items, 60, currY);
         return currY + 6;
     });
 
     doc.save(`Resume_Dr_Shakir_Parvej.pdf`);
 };
+
+const ICON_OPTIONS = ['activity', 'clipboard-list', 'stethoscope', 'brain', 'code', 'microscope', 'users', 'heart', 'drip', 'award', 'database', 'zap'];
 
 // --- CMS Logic (admin.html) ---
 function initAdmin() {
@@ -307,24 +303,37 @@ function initAdmin() {
     };
 
     // File Handlers
-    const setupUpload = (id, statePath, previewId) => {
+    window.setupUpload = (id, statePath, previewId) => {
         const el = document.getElementById(id);
         if (!el) return;
         el.onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
+            const statusLabel = document.createElement('span');
+            statusLabel.className = 'absolute top-0 right-0 p-1 text-[8px] bg-cyan-500 text-white animate-pulse';
+            statusLabel.innerText = "SYNCING...";
+            el.parentElement.appendChild(statusLabel);
+
             if (storage) {
-                const ref = storage.ref().child(`${statePath}/${Date.now()}_${file.name}`);
-                await ref.put(file);
-                const url = await ref.getDownloadURL();
-                
-                const keys = statePath.split('.');
-                let current = state;
-                for (let i = 0; i < keys.length - 1; i++) current = current[keys[i]];
-                current[keys[keys.length - 1]] = url;
-                
-                if (previewId) document.getElementById(previewId).src = url;
-                alert("Cloud Sync Successful!");
+                try {
+                    const ref = storage.ref().child(`${statePath}/${Date.now()}_${file.name}`);
+                    await ref.put(file);
+                    const url = await ref.getDownloadURL();
+                    
+                    const keys = statePath.split('.');
+                    let current = state;
+                    for (let i = 0; i < keys.length - 1; i++) current = current[keys[i]];
+                    current[keys[keys.length - 1]] = url;
+                    
+                    if (previewId) document.getElementById(previewId).src = url;
+                    statusLabel.innerText = "SYNCED!";
+                    setTimeout(() => statusLabel.remove(), 2000);
+                } catch (err) {
+                    console.error("Upload Failed:", err);
+                    statusLabel.innerText = "ERROR!";
+                    statusLabel.classList.replace('bg-cyan-500', 'bg-red-500');
+                    setTimeout(() => statusLabel.remove(), 5000);
+                }
             } else {
                 const reader = new FileReader();
                 reader.onload = (re) => {
@@ -333,9 +342,10 @@ function initAdmin() {
                     for (let i = 0; i < keys.length - 1; i++) current = current[keys[i]];
                     current[keys[keys.length - 1]] = re.target.result;
                     if (previewId) document.getElementById(previewId).src = re.target.result;
+                    statusLabel.innerText = "LOADED!";
+                    setTimeout(() => statusLabel.remove(), 2000);
                 };
                 reader.readAsDataURL(file);
-                alert("Asset Loaded (Local Mode).");
             }
         };
     };
@@ -369,7 +379,7 @@ function populateCMS() {
 
     renderListEditor('experience-editor-list', state.experience, ['year', 'role', 'company', 'desc']);
     renderListEditor('competencies-editor-list', state.competencies, ['icon', 'category', 'items']);
-    renderListEditor('certificates-editor-list', state.certificates, ['title', 'issuer', 'image']);
+    renderCertificatesEditor();
 
     if (window.lucide) lucide.createIcons();
 }
@@ -386,7 +396,13 @@ function renderListEditor(containerId, list, fields) {
                 ${fields.map(f => `
                     <div class="space-y-1">
                         <label class="text-[8px] uppercase tracking-widest text-gray-500">${f}</label>
-                        <input type="text" value="${item[f] || ''}" onchange="updateItem('${containerId}', ${index}, '${f}', this.value)" class="admin-input py-1 text-xs">
+                        ${f === 'icon' ? `
+                            <select onchange="updateItem('${containerId}', ${index}, '${f}', this.value)" class="admin-input py-1 text-xs">
+                                ${ICON_OPTIONS.map(opt => `<option value="${opt}" ${item[f] === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                            </select>
+                        ` : `
+                            <input type="text" value="${item[f] || ''}" onchange="updateItem('${containerId}', ${index}, '${f}', this.value)" class="admin-input py-1 text-xs">
+                        `}
                     </div>
                 `).join('')}
             </div>
@@ -395,18 +411,61 @@ function renderListEditor(containerId, list, fields) {
     lucide.createIcons();
 }
 
+function renderCertificatesEditor() {
+    const container = document.getElementById('certificates-editor-list');
+    if (!container) return;
+    container.innerHTML = state.certificates.map((cert, index) => `
+        <div class="glass-card p-4 rounded-xl space-y-3 group">
+            <div class="relative aspect-video rounded-lg overflow-hidden bg-black/40 border border-white/5">
+                <img id="cert-preview-${index}" src="${getAsset(cert.image, 'cert')}" class="w-full h-full object-cover">
+                <label class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                    <i data-lucide="camera" class="h-4 w-4 mb-1"></i>
+                    <span class="text-[8px] uppercase font-bold">Update Doc</span>
+                    <input type="file" onchange="uploadCert(${index}, this)" class="hidden" accept="image/*">
+                </label>
+            </div>
+            <input type="text" value="${cert.title}" placeholder="Title" onchange="state.certificates[${index}].title = this.value" class="admin-input py-1 text-xs">
+            <input type="text" value="${cert.issuer}" placeholder="Issuer" onchange="state.certificates[${index}].issuer = this.value" class="admin-input py-1 text-xs">
+            <button onclick="removeItem('certificates-editor-list', ${index})" class="w-full py-2 text-[8px] uppercase font-bold text-red-400 bg-red-400/5 hover:bg-red-400/10 rounded-lg">Delete Certificate</button>
+        </div>
+    `).join('');
+    lucide.createIcons();
+}
+
+window.uploadCert = async (index, input) => {
+    const file = input.files[0];
+    if (!file) return;
+    if (storage) {
+        try {
+            const ref = storage.ref().child(`certificates/${Date.now()}_${file.name}`);
+            await ref.put(file);
+            const url = await ref.getDownloadURL();
+            state.certificates[index].image = url;
+            document.getElementById(`cert-preview-${index}`).src = url;
+            alert("Certificate Synced!");
+        } catch (e) { alert("Upload Failed."); }
+    } else {
+        const reader = new FileReader();
+        reader.onload = (re) => {
+            state.certificates[index].image = re.target.result;
+            document.getElementById(`cert-preview-${index}`).src = re.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+};
+
 window.addItem = (category) => {
     const listMap = {
         'experience-editor-list': { year: '2024', role: 'New Role', company: 'Company', desc: 'Description' },
         'competencies-editor-list': { icon: 'activity', category: 'New Category', items: 'Skill 1, Skill 2' },
-        'certificates-editor-list': { title: 'New Certificate', issuer: 'Issuer', image: 'https://via.placeholder.com/600x400' }
+        'certificates-editor-list': { title: 'New Certificate', issuer: 'Issuer', image: '' }
     };
-    const targetState = {
-        'experience-editor-list': state.experience,
-        'competencies-editor-list': state.competencies,
-        'certificates-editor-list': state.certificates
+    const targetStateMap = {
+        'experience-editor-list': 'experience',
+        'competencies-editor-list': 'competencies',
+        'certificates-editor-list': 'certificates'
     };
-    targetState[category].push(listMap[category]);
+    state[targetStateMap[category]].push(listMap[category]);
     populateCMS();
 };
 
