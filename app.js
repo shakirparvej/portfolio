@@ -20,7 +20,7 @@ const DEFAULT_DATA = {
         title: "ICU & EMERGENCY PHYSICIAN | HEALTHCARE AI ARCHITECT",
         location: "Noida Sector 62 | Rajasthan",
         bio: "Forward-thinking medical professional specializing in intensive care. Building the future of tech-driven healthcare with Python and Rust.",
-        photo: "", // Initialized empty for avatar fallback
+        photo: "",
         education: "MBBS, GMC Kota, India (2023)",
         languages: "English, Hindi, Urdu, Arabic",
         resumeUrl: "#",
@@ -62,6 +62,7 @@ let db, storage;
 document.addEventListener('DOMContentLoaded', () => {
     initFirebase();
     loadState();
+    initContactForm();
     
     // Fail-safe: Force hide loader after 3 seconds
     setTimeout(() => {
@@ -404,6 +405,9 @@ function populateCMS() {
     setVal('edit-linkedin', state.contact.linkedin);
     setVal('edit-logo-text', state.profile.logoText);
 
+    const adminPreview = document.getElementById('admin-profile-preview');
+    if (adminPreview) adminPreview.src = getAsset(state.profile.photo);
+
     const toggleContainer = document.getElementById('section-toggles');
     if (toggleContainer) {
         toggleContainer.innerHTML = Object.keys(state.sections).map(sectionId => `
@@ -560,6 +564,36 @@ window.saveChanges = async () => {
         alert("Portfolio Live & Synchronized!");
     } catch (e) { alert("Save Error"); console.error(e); }
 };
+
+function initContactForm() {
+    const form = document.getElementById('contact-form');
+    if (!form) return;
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('contact-submit-btn');
+        if (!btn) return;
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<span>Sending...</span>`;
+        
+        const msgData = {
+            name: document.getElementById('contact-name').value,
+            email: document.getElementById('contact-email-input').value,
+            subject: document.getElementById('contact-subject').value,
+            message: document.getElementById('contact-message').value,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        try {
+            if (db) {
+                await db.collection('messages').add(msgData);
+                alert("Message Sent Successfully!");
+                form.reset();
+            } else { alert("Offline Mode: Message saved locally."); console.log(msgData); }
+        } catch (e) { alert("Error: " + e.message); }
+        finally { btn.disabled = false; btn.innerHTML = originalText; }
+    };
+}
 
 // Safety
 setTimeout(() => { if (!window.location.pathname.includes('admin.html')) renderMain(); }, 5000);
