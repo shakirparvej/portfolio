@@ -63,6 +63,17 @@ document.addEventListener('DOMContentLoaded', () => {
     initFirebase();
     loadState();
     
+    // Fail-safe: Force hide loader after 3 seconds
+    setTimeout(() => {
+        if (!window.location.pathname.includes('admin.html')) {
+            const loader = document.getElementById('loader');
+            if (loader && loader.style.display !== 'none') {
+                console.warn("Failsafe Loader Exit Triggered.");
+                renderMain();
+            }
+        }
+    }, 3000);
+
     // Triple-Tap Logo Logic
     const logoEl = document.getElementById('logo');
     let clicks = 0;
@@ -71,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             clicks++;
             if (clicks >= 3) { window.location.href = 'admin.html'; clicks = 0; }
-            setTimeout(() => clicks = 0, 2000);
+            setTimeout(() => clicks = 0, 1500);
         };
     }
 });
