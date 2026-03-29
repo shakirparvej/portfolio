@@ -100,7 +100,12 @@ function initFirebase() {
 async function loadState() {
     // 1. Load Local Immediately
     const local = localStorage.getItem(VERSION);
-    if (local) state = JSON.parse(local);
+    if (local) {
+        try {
+            const parsed = JSON.parse(local);
+            state = { ...DEFAULT_DATA, ...parsed, profile: { ...DEFAULT_DATA.profile, ...parsed.profile }, contact: { ...DEFAULT_DATA.contact, ...parsed.contact } };
+        } catch (e) { state = DEFAULT_DATA; }
+    }
 
     const isAdmin = window.location.pathname.includes('admin.html');
     if (!isAdmin) renderMain(); 
@@ -111,15 +116,13 @@ async function loadState() {
         db.collection('portfolio').doc('main').get()
             .then(doc => {
                 if (doc.exists) {
-                    state = doc.data();
+                    const cloud = doc.data();
+                    state = { ...DEFAULT_DATA, ...cloud, profile: { ...DEFAULT_DATA.profile, ...cloud.profile }, contact: { ...DEFAULT_DATA.contact, ...cloud.contact } };
                     localStorage.setItem(VERSION, JSON.stringify(state));
-                    if (!isAdmin) renderMain(); // Rerender with fresh cloud data
+                    if (!isAdmin) renderMain(); 
                 }
             })
-            .catch(e => {
-                console.warn("Cloud Sync Unavailable (Likely Permissions):", e);
-                // Fallback: Site is already rendered from local/default
-            });
+            .catch(e => console.warn("Cloud Sync Error:", e));
     }
 }
 
@@ -128,32 +131,41 @@ function renderMain() {
     const isAdmin = window.location.pathname.includes('admin.html');
     if (isAdmin) return;
 
-    // Logo & Navbar
+    // Immediately hide loader on first render attempt
+    const loader = document.getElementById('loader');
+    if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => loader.style.display = 'none', 800);
+    }
+
     const safeSet = (id, val, attr = 'innerText') => {
         const el = document.getElementById(id);
         if (el) el[attr] = val || '';
     };
 
-    safeSet('logo', state.profile.logoText);
+    safeSet('logo', state.profile?.logoText);
     
     // Visibility Filters
-    Object.keys(state.sections).forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = state.sections[id].visible ? 'block' : 'none';
-    });
+    if (state.sections) {
+        Object.keys(state.sections).forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = state.sections[id]?.visible ? 'block' : 'none';
+        });
+    }
 
     // Content
-    const nameParts = (state.profile.name || "").split(' ');
+    const profile = state.profile || {};
+    const nameParts = (profile.name || "").split(' ');
     const first = nameParts.slice(0, 2).join(' ');
     const last = nameParts.slice(2).join(' ');
     const heroName = document.getElementById('hero-name');
     if (heroName) heroName.innerHTML = `${first} <br> <span class="gradient-text">${last}.</span>`;
 
-    safeSet('hero-title-desc', state.profile.title);
-    safeSet('hero-location', state.profile.location);
-    safeSet('profile-img', state.profile.photo, 'src');
-    safeSet('about-bio', state.profile.bio);
-    safeSet('about-edu', state.profile.education);
+    safeSet('hero-title-desc', profile.title);
+    safeSet('hero-location', profile.location);
+    safeSet('profile-img', profile.photo, 'src');
+    safeSet('about-bio', profile.bio);
+    safeSet('about-edu', profile.education);
 
     // List Injections
     const inject = (id, list, htmlFn) => {
@@ -184,7 +196,7 @@ function renderMain() {
     inject('certificates-grid', state.certificates || [], cert => `
         <div class="glass-card p-4 rounded-2xl group cursor-pointer hover:border-cyan-500/40 transition-all">
             <div class="aspect-video rounded-xl overflow-hidden mb-4 border border-white/5 relative">
-                <img src="${cert.image}" class="w-full h-full object-cover">
+                <img src="${cert.image}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/600x400'">
                 <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                     <i data-lucide="zoom-in" class="h-6 w-6 text-white"></i>
                 </div>
@@ -201,20 +213,16 @@ function renderMain() {
         </div>
     `);
 
-    safeSet('contact-email', state.contact.email);
-    safeSet('contact-phone', state.contact.phone);
+    const contact = state.contact || {};
+    safeSet('contact-email', contact.email);
+    safeSet('contact-phone', contact.phone);
     const linkedinLink = document.getElementById('linkedin-link');
-    if (linkedinLink) linkedinLink.href = state.contact.linkedin || '#';
+    if (linkedinLink) linkedinLink.href = contact.linkedin || '#';
     
     const waLink = document.getElementById('contact-whatsapp-link');
-    if (waLink) waLink.href = state.contact.whatsapp;
+    if (waLink) waLink.href = contact.whatsapp;
 
     if (window.lucide) lucide.createIcons();
-    const loader = document.getElementById('loader');
-    if (loader) {
-        loader.style.opacity = '0';
-        setTimeout(() => loader.style.display = 'none', 800);
-    }
 }
 
 // --- Dynamic PDF Resume Engine ---
