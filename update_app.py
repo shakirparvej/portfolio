@@ -1,6 +1,6 @@
 import os
 
-# Prepare the JS content for the optimized app.js
+# Prepare the JS content for the ROBUST app.js
 js_content = r'''
 // Firebase Configuration Placeholder
 // REPLACE with your actual config from Firebase Console
@@ -15,11 +15,17 @@ const firebaseConfig = {
 
 // Initialize Firebase (Conditional)
 let db, storage;
-if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
-    firebase.initializeApp(firebaseConfig);
-    db = firebase.firestore();
-    storage = firebase.storage();
-    console.log("Firebase Initialized");
+try {
+    if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        storage = firebase.storage();
+        console.log("Firebase initialized successfully");
+    } else {
+        console.warn("Firebase configuration missing. Running in Local Mode.");
+    }
+} catch (e) {
+    console.error("Firebase initialization failed:", e);
 }
 
 const DEFAULT_DATA = {
@@ -71,22 +77,22 @@ function saveStateToLocal() {
     // Sync to Firebase if cloud is ready
     if (db) {
         db.collection('portfolios').doc('shakir').set(state)
-            .then(() => console.log("Cloud Sync Successful"))
-            .catch(e => console.error("Cloud Sync Error", e));
+            .then(() => showToast('Synced to Cloud', 'success'))
+            .catch(e => console.error("Cloud sync failed", e));
     }
 }
 
 async function loadFromCloud() {
-    if (db) {
-        try {
-            const doc = await db.collection('portfolios').doc('shakir').get();
-            if (doc.exists) {
-                state = doc.data();
-                render();
-            }
-        } catch (e) {
-            console.error("Error loading from cloud", e);
+    if (!db) return;
+    try {
+        const doc = await db.collection('portfolios').doc('shakir').get();
+        if (doc.exists) {
+            state = doc.data();
+            render();
+            console.log("State updated from Cloud");
         }
+    } catch (e) {
+        console.warn("Cloud load failed, using local state", e);
     }
 }
 
@@ -160,16 +166,19 @@ function render() {
     if (contactWA) { contactWA.href = state.contact.whatsapp; }
 
     lucide.createIcons();
-
-    // Hide Loader
-    setTimeout(() => {
-        const loader = document.getElementById('loader');
-        if (loader) {
-            loader.style.opacity = '0';
-            setTimeout(() => loader.style.display = 'none', 800);
-        }
-    }, 500);
+    hideLoader();
 }
+
+function hideLoader() {
+    const loader = document.getElementById('loader');
+    if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => loader.style.display = 'none', 800);
+    }
+}
+
+// Global safety timeout to ensure loader disappears after 3 seconds anyway
+setTimeout(hideLoader, 3000);
 
 function downloadResumePDF() {
     window.print();
@@ -205,14 +214,7 @@ function populateFields() {
     document.getElementById('edit-certificates').value = JSON.stringify(state.certificates || [], null, 2);
 }
 
-async function uploadFile(file) {
-    if (!storage) return null;
-    const ref = storage.ref().child('uploads/' + file.name);
-    const snapshot = await ref.put(file);
-    return await snapshot.ref.getDownloadURL();
-}
-
-async function saveChanges() {
+function saveChanges() {
     try {
         const newData = {
             profile: {
@@ -265,7 +267,11 @@ document.getElementById('logo').onclick = (e) => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    loadFromCloud().then(render);
+    // Initial render with local data
+    render();
+    
+    // Background cloud sync
+    loadFromCloud();
 });
 '''
 
