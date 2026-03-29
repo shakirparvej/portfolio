@@ -1,3 +1,541 @@
+commit c9de9cd9c7a92fc819e4a51628d0b70a695ef157
+Author: shakir <acadmiana@gmail.com>
+Date:   Sun Mar 29 01:32:24 2026 +0530
+
+    initial portfolio
+
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..57cbd6a
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1 @@
++Premium UI version. Setup Firebase config and deploy via Vercel.
+\ No newline at end of file
+diff --git a/app.js b/app.js
+new file mode 100644
+index 0000000..3ca5470
+--- /dev/null
++++ b/app.js
+@@ -0,0 +1,192 @@
++import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
++import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
++
++const HASHED_PASSWORD = "5e884898da28047151d0e56f8dc6292773603d0d6aabbddc3b6f3d6f6a6c6b8";
++
++const firebaseConfig = {
++  apiKey: "AIzaSyCS488771dGxCZujO5GdLb4GQ__koM215Q",
++  authDomain: "portfolio-52a6e.firebaseapp.com",
++  projectId: "portfolio-52a6e",
++  storageBucket: "portfolio-52a6e.firebasestorage.app",
++  messagingSenderId: "25182923540",
++  appId: "1:25182923540:web:9cc9b0a418947e96b23001",
++  measurementId: "G-4YBPVXS2ZQ"
++};
++const app = initializeApp(firebaseConfig);
++const db = getFirestore(app);
++
++console.log("App started");
++
++let state = {
++  name: "Your Name",
++  bio: "Portfolio loading...",
++  links: {},
++  sections: []
++};
++
++async function loadData(){
++  console.log("Loading Firebase...");
++  try {
++    const snap = await getDoc(doc(db,"portfolio","main"));
++    if(snap.exists()){
++      state = snap.data();
++      console.log("Firebase loaded");
++    }
++  } catch (err) {
++    console.error("Firebase error or not configured:", err);
++  }
++  render();
++}
++
++function render(){
++  console.log("Render called");
++  const el = document.getElementById("app");
++
++  const links = state.links || {};
++  const sections = state.sections || [];
++
++  el.innerHTML = `
++    <div class="space-y-2">
++      <h1 class="text-4xl font-bold tracking-tight">${state.name || "Portfolio"}</h1>
++      <p class="text-gray-400">${state.bio || ""}</p>
++    </div>
++
++    ${Object.keys(links).length > 0 ? `
++    <div class="flex flex-wrap gap-3 mt-3">
++      ${Object.entries(links).map(([k,v])=> v? `<a href="${v}" target="_blank" class="px-3 py-1 border border-cyan-400/30 rounded-full text-sm hover:bg-cyan-400/10">${k}</a>`:"").join("")}
++    </div>
++    ` : ""}
++
++    <div class="grid gap-6 mt-6">
++      ${sections.filter(s=>s.visible!==false).map(s=>`
++        <div class="glass p-6 rounded-2xl">
++          <h2 class="text-lg font-semibold text-cyan-400">${s.title}</h2>
++          <p class="text-gray-300 mt-2 leading-relaxed">${s.content}</p>
++        </div>
++      `).join("")}
++    </div>
++
++    ${sections.length === 0 ? `
++      <div class="p-8 border border-dashed border-white/10 rounded-2xl text-center text-gray-500">
++        Portfolio is loading or not configured yet
++      </div>
++    ` : ""}
++  `;
++}
++
++function renderAdmin(){
++  const ed = document.getElementById("adminContent");
++
++  const name = state.name || "";
++  const bio = state.bio || "";
++  const links = state.links || {};
++  const sections = state.sections || [];
++
++  ed.innerHTML = `
++    <input id="name" value="${name}" class="text-black w-full p-2" placeholder="Full Name"/>
++    <textarea id="bio" class="text-black w-full p-2" placeholder="Bio">${bio}</textarea>
++
++    <h3 class="text-lg">Links</h3>
++    ${Object.entries(links).map(([k,v])=>`
++      <div class="flex gap-2">
++        <input value="${k}" class="key text-black p-1"/>
++        <input value="${v}" class="val text-black p-1 flex-1"/>
++      </div>
++    `).join("")}
++
++    <button onclick="addLink()" class="bg-blue-500 p-2 rounded">+ Link</button>
++
++    <h3 class="text-lg mt-4">Sections</h3>
++    ${sections.map((s,i)=>`
++      <div class="border p-3 rounded mb-2">
++        <input value="${s.title}" class="title text-black w-full mb-1"/>
++        <textarea class="content text-black w-full">${s.content}</textarea>
++
++        <div class="flex items-center gap-3 mt-2">
++          <label>Visible <input type="checkbox" ${s.visible!==false?"checked":""} class="visible"/></label>
++          <button onclick="moveUp(${i})">↑</button>
++          <button onclick="moveDown(${i})">↓</button>
++          <button onclick="removeSection(${i})" class="text-red-500">Delete</button>
++        </div>
++      </div>
++    `).join("")}
++
++    <button onclick="addSection()" class="bg-blue-500 p-2 rounded">+ Section</button>
++    <button onclick="saveData()" class="bg-green-500 p-2 rounded">Save</button>
++  `;
++}
++
++window.addLink = () => { state.links["new"] = ""; renderAdmin(); }
++window.addSection = () => { state.sections.push({ title: "New", content: "Edit", visible: true }); renderAdmin(); }
++window.removeSection = (i) => { state.sections.splice(i, 1); renderAdmin(); }
++
++window.moveUp = (i) => { if (i > 0) { [state.sections[i - 1], state.sections[i]] = [state.sections[i], state.sections[i - 1]]; renderAdmin(); } }
++window.moveDown = (i) => { if (i < state.sections.length - 1) { [state.sections[i + 1], state.sections[i]] = [state.sections[i], state.sections[i + 1]]; renderAdmin(); } }
++
++window.saveData = async () => {
++  state.name = document.getElementById("name").value;
++  state.bio = document.getElementById("bio").value;
++
++  const keys = document.querySelectorAll(".key");
++  const vals = document.querySelectorAll(".val");
++  state.links = {};
++  keys.forEach((k, i) => state.links[k.value] = vals[i].value);
++
++  const titles = document.querySelectorAll(".title");
++  const contents = document.querySelectorAll(".content");
++  const visibles = document.querySelectorAll(".visible");
++
++  state.sections = [];
++  titles.forEach((t, i) => {
++    state.sections.push({ title: t.value, content: contents[i].value, visible: visibles[i].checked });
++  });
++
++  await setDoc(doc(db, "portfolio", "main"), state);
++  alert("Saved");
++  render();
++}
++
++async function hash(val) {
++  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(val));
++  return [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2, "0")).join("");
++}
++
++window.checkPass = async () => {
++  const val = document.getElementById("adminPass").value;
++  const h = await hash(val);
++  if (h === HASHED_PASSWORD) {
++    sessionStorage.setItem("admin", "true");
++    unlock();
++  } else alert("Wrong");
++}
++
++function unlock() {
++  document.getElementById("adminContent").classList.remove("hidden");
++  renderAdmin();
++}
++
++window.downloadPDF = () => {
++  const el = document.getElementById("resumeA4");
++
++  el.innerHTML = `
++    <div class="a4">
++      <h1>${state.name}</h1>
++      <p>${state.bio}</p>
++      ${state.sections.filter(s => s.visible !== false).map(s => `
++        <h2>${s.title}</h2>
++        <p>${s.content}</p>
++      `).join("")}
++    </div>
++  `;
++
++  html2pdf().set({ jsPDF: { format: "a4" } }).from(el).save();
++}
++
++document.getElementById("adminBtn").onclick = () => {
++  document.getElementById("adminPanel").classList.toggle("hidden");
++};
++
++if(sessionStorage.getItem("admin")==="true"){ unlock(); }
++
++render();
++loadData();
+diff --git a/index.html b/index.html
+new file mode 100644
+index 0000000..35756a5
+--- /dev/null
++++ b/index.html
+@@ -0,0 +1,68 @@
++<!DOCTYPE html>
++<html lang="en">
++<head>
++<meta charset="UTF-8">
++<meta name="viewport" content="width=device-width, initial-scale=1.0">
++<title>Portfolio Premium</title>
++
++<script src="https://cdn.tailwindcss.com"></script>
++<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
++
++<style>
++body { background:#050505; color:white; font-family: Inter, sans-serif; }
++
++.glass {
++  background: rgba(255,255,255,0.05);
++  backdrop-filter: blur(12px);
++  border: 1px solid rgba(255,255,255,0.08);
++  transition: all 0.3s ease;
++}
++.glass:hover {
++  transform: translateY(-4px);
++  border-color: rgba(6,182,212,0.4);
++}
++
++.a4 {
++  width:794px;
++  min-height:1123px;
++  background:white;
++  color:black;
++  padding:40px;
++}
++
++.fade { animation: fade 0.6s ease; }
++@keyframes fade {
++  from { opacity:0; transform:translateY(10px);}
++  to { opacity:1; transform:translateY(0);}
++}
++</style>
++</head>
++
++<body>
++
++<div class="max-w-4xl mx-auto px-6 py-10">
++
++  <div id="app" class="space-y-6 fade">
++    <div class="p-8 text-center text-gray-400">
++      Portfolio loading...
++    </div>
++  </div>
++
++</div>
++
++<button id="adminBtn" class="fixed bottom-6 right-6 bg-cyan-500 hover:bg-cyan-600 p-3 rounded-full shadow-lg">⚙</button>
++<button onclick="downloadPDF()" class="fixed bottom-6 left-6 bg-purple-600 hover:bg-purple-700 p-3 rounded shadow-lg">PDF</button>
++
++<div id="adminPanel" class="hidden fixed inset-0 bg-black/95 p-6 overflow-auto">
++  <input type="password" id="adminPass" placeholder="Password" class="p-2 text-black"/>
++  <button onclick="checkPass()" class="bg-green-500 p-2">Enter</button>
++
++  <div id="adminContent" class="hidden mt-6 space-y-4"></div>
++</div>
++
++<div id="resumeA4" class="hidden"></div>
++
++<script type="module" src="app.js"></script>
++
++</body>
++</html>
+
+commit 3047064d9b0da666cfdd3623e1c458440c12dc81
+Author: shakirparvej <acadmiana@gmail.com>
+Date:   Sun Mar 29 01:03:45 2026 +0530
+
+    Add files via upload
+
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..57cbd6a
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1 @@
++Premium UI version. Setup Firebase config and deploy via Vercel.
+\ No newline at end of file
+diff --git a/app.js b/app.js
+new file mode 100644
+index 0000000..8f2a08a
+--- /dev/null
++++ b/app.js
+@@ -0,0 +1,161 @@
++import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
++import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
++
++const HASHED_PASSWORD = "5e884898da28047151d0e56f8dc6292773603d0d6aabbddc3b6f3d6f6a6c6b8";
++
++const firebaseConfig = {
++  apiKey: "YOUR_KEY",
++  authDomain: "YOUR_DOMAIN",
++  projectId: "YOUR_PROJECT_ID"
++};
++
++const app = initializeApp(firebaseConfig);
++const db = getFirestore(app);
++
++let state = {};
++
++async function loadData(){
++  const snap = await getDoc(doc(db,"portfolio","main"));
++  state = snap.exists() ? snap.data() : {
++    name:"Your Name",
++    bio:"Your bio",
++    links:{},
++    sections:[]
++  };
++  render();
++}
++
++function render(){
++  const el = document.getElementById("app");
++
++  el.innerHTML = `
++    <div class="space-y-2">
++      <h1 class="text-4xl font-bold tracking-tight">${state.name}</h1>
++      <p class="text-gray-400">${state.bio}</p>
++    </div>
++
++    <div class="flex flex-wrap gap-3 mt-3">
++      ${Object.entries(state.links).map(([k,v])=> v? `<a href="${v}" class="px-3 py-1 border border-cyan-400/30 rounded-full text-sm hover:bg-cyan-400/10">${k}</a>`:"").join("")}
++    </div>
++
++    <div class="grid gap-6 mt-6">
++      ${state.sections.filter(s=>s.visible!==false).map(s=>`
++        <div class="glass p-6 rounded-2xl">
++          <h2 class="text-lg font-semibold text-cyan-400">${s.title}</h2>
++          <p class="text-gray-300 mt-2 leading-relaxed">${s.content}</p>
++        </div>
++      `).join("")}
++    </div>
++  `;
++}
++
++function renderAdmin(){
++  const ed = document.getElementById("adminContent");
++
++  ed.innerHTML = `
++    <input id="name" value="${state.name}" class="text-black w-full p-2"/>
++    <textarea id="bio" class="text-black w-full p-2">${state.bio}</textarea>
++
++    <h3 class="text-lg">Links</h3>
++    ${Object.entries(state.links).map(([k,v])=>`
++      <div class="flex gap-2">
++        <input value="${k}" class="key text-black p-1"/>
++        <input value="${v}" class="val text-black p-1 flex-1"/>
++      </div>
++    `).join("")}
++
++    <button onclick="addLink()" class="bg-blue-500 p-2 rounded">+ Link</button>
++
++    <h3 class="text-lg mt-4">Sections</h3>
++    ${state.sections.map((s,i)=>`
++      <div class="border p-3 rounded mb-2">
++        <input value="${s.title}" class="title text-black w-full mb-1"/>
++        <textarea class="content text-black w-full">${s.content}</textarea>
++
++        <div class="flex items-center gap-3 mt-2">
++          <label>Visible <input type="checkbox" ${s.visible!==false?"checked":""} class="visible"/></label>
++          <button onclick="moveUp(${i})">↑</button>
++          <button onclick="moveDown(${i})">↓</button>
++          <button onclick="removeSection(${i})" class="text-red-500">Delete</button>
++        </div>
++      </div>
++    `).join("")}
++
++    <button onclick="addSection()" class="bg-blue-500 p-2 rounded">+ Section</button>
++    <button onclick="saveData()" class="bg-green-500 p-2 rounded">Save</button>
++  `;
++}
++
++window.addLink = ()=>{ state.links["new"]=""; renderAdmin(); }
++window.addSection = ()=>{ state.sections.push({title:"New",content:"Edit",visible:true}); renderAdmin(); }
++window.removeSection = (i)=>{ state.sections.splice(i,1); renderAdmin(); }
++
++window.moveUp = (i)=>{ if(i>0){ [state.sections[i-1],state.sections[i]]=[state.sections[i],state.sections[i-1]]; renderAdmin();}}
++window.moveDown = (i)=>{ if(i<state.sections.length-1){ [state.sections[i+1],state.sections[i]]=[state.sections[i],state.sections[i+1]]; renderAdmin();}}
++
++window.saveData = async ()=>{
++  state.name = document.getElementById("name").value;
++  state.bio = document.getElementById("bio").value;
++
++  const keys=document.querySelectorAll(".key");
++  const vals=document.querySelectorAll(".val");
++  state.links={};
++  keys.forEach((k,i)=>state.links[k.value]=vals[i].value);
++
++  const titles=document.querySelectorAll(".title");
++  const contents=document.querySelectorAll(".content");
++  const visibles=document.querySelectorAll(".visible");
++
++  state.sections=[];
++  titles.forEach((t,i)=>{
++    state.sections.push({title:t.value,content:contents[i].value,visible:visibles[i].checked});
++  });
++
++  await setDoc(doc(db,"portfolio","main"),state);
++  alert("Saved");
++  render();
++}
++
++async function hash(val){
++ const buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(val));
++ return [...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,"0")).join("");
++}
++
++window.checkPass = async ()=>{
++  const val=document.getElementById("adminPass").value;
++  const h=await hash(val);
++  if(h===HASHED_PASSWORD){
++    sessionStorage.setItem("admin","true");
++    unlock();
++  } else alert("Wrong");
++}
++
++function unlock(){
++  document.getElementById("adminContent").classList.remove("hidden");
++  renderAdmin();
++}
++
++window.downloadPDF = ()=>{
++  const el=document.getElementById("resumeA4");
++
++  el.innerHTML=`
++    <div class="a4">
++      <h1>${state.name}</h1>
++      <p>${state.bio}</p>
++      ${state.sections.filter(s=>s.visible!==false).map(s=>`
++        <h2>${s.title}</h2>
++        <p>${s.content}</p>
++      `).join("")}
++    </div>
++  `;
++
++  html2pdf().set({jsPDF:{format:"a4"}}).from(el).save();
++}
++
++document.getElementById("adminBtn").onclick=()=>{
++  document.getElementById("adminPanel").classList.toggle("hidden");
++};
++
++if(sessionStorage.getItem("admin")==="true"){ unlock(); }
++
++loadData();
+diff --git a/index.html b/index.html
+new file mode 100644
+index 0000000..9ee5957
+--- /dev/null
++++ b/index.html
+@@ -0,0 +1,64 @@
++<!DOCTYPE html>
++<html lang="en">
++<head>
++<meta charset="UTF-8">
++<meta name="viewport" content="width=device-width, initial-scale=1.0">
++<title>Portfolio Premium</title>
++
++<script src="https://cdn.tailwindcss.com"></script>
++<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
++
++<style>
++body { background:#050505; color:white; font-family: Inter, sans-serif; }
++
++.glass {
++  background: rgba(255,255,255,0.05);
++  backdrop-filter: blur(12px);
++  border: 1px solid rgba(255,255,255,0.08);
++  transition: all 0.3s ease;
++}
++.glass:hover {
++  transform: translateY(-4px);
++  border-color: rgba(6,182,212,0.4);
++}
++
++.a4 {
++  width:794px;
++  min-height:1123px;
++  background:white;
++  color:black;
++  padding:40px;
++}
++
++.fade { animation: fade 0.6s ease; }
++@keyframes fade {
++  from { opacity:0; transform:translateY(10px);}
++  to { opacity:1; transform:translateY(0);}
++}
++</style>
++</head>
++
++<body>
++
++<div class="max-w-4xl mx-auto px-6 py-10">
++
++  <div id="app" class="space-y-6 fade"></div>
++
++</div>
++
++<button id="adminBtn" class="fixed bottom-6 right-6 bg-cyan-500 hover:bg-cyan-600 p-3 rounded-full shadow-lg">⚙</button>
++<button onclick="downloadPDF()" class="fixed bottom-6 left-6 bg-purple-600 hover:bg-purple-700 p-3 rounded shadow-lg">PDF</button>
++
++<div id="adminPanel" class="hidden fixed inset-0 bg-black/95 p-6 overflow-auto">
++  <input type="password" id="adminPass" placeholder="Password" class="p-2 text-black"/>
++  <button onclick="checkPass()" class="bg-green-500 p-2">Enter</button>
++
++  <div id="adminContent" class="hidden mt-6 space-y-4"></div>
++</div>
++
++<div id="resumeA4" class="hidden"></div>
++
++<script type="module" src="app.js"></script>
++
++</body>
++</html>
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
@@ -16,12 +554,6 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-    
-    <!-- Firebase SDK (v9 compatibility) -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-    
     <script src="app.js" defer></script>
 
     
@@ -121,40 +653,9 @@
             #profile-img { width: 150px !important; height: 150px !important; border-radius: 5px !important; float: left; margin-right: 20px; }
             #experience { display: block !important; }
         }
-
-        /* Loader Styles */
-        #loader {
-            position: fixed;
-            inset: 0;
-            z-index: 999;
-            background: #0a0a0a;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .loader-pulse {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            border: 2px solid rgba(6, 182, 212, 0.2);
-            border-top-color: #06b6d4;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="custom-scrollbar selection:bg-cyan-500/30 selection:text-cyan-400">
-
-    <!-- Loader Overlay -->
-    <div id="loader">
-        <div class="loader-pulse mb-6"></div>
-        <div class="text-cyan-400 font-display font-bold text-xl tracking-tighter animate-pulse">DR. SHAKIR PARVEJ</div>
-        <p class="text-gray-500 text-xs mt-2 uppercase tracking-[0.3em]">Healthcare AI Portfolio</p>
-    </div>
 
     <!-- Grid Background Overlay -->
     <div class="fixed inset-0 grid-background pointer-events-none z-0"></div>
@@ -201,19 +702,9 @@
                     </p>
 
                     <div class="flex items-center space-x-4 text-sm text-gray-500">
-                            <div class="space-y-2">
-                                <label class="text-xs font-bold text-gray-500 uppercase">Profile Photo (Separate Image Path)</label>
-                                <input type="text" id="edit-photo" value="./portrait.jpg" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 focus:outline-none focus:border-cyan-500/50 transition-colors">
-                                <p class="text-[10px] text-cyan-500/50">Current: portrait.jpg. Upload via Firebase Storage coming soon.</p>
-                            </div>
-                        </div>
-
-                        <div class="grid md:grid-cols-2 gap-8">
-                            <div class="space-y-2">
-                                <label class="text-xs font-bold text-gray-500 uppercase">Certificates (JSON List)</label>
-                                <textarea id="edit-certificates" rows="4" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 focus:outline-none focus:border-cyan-500/50 transition-colors resize-none font-mono text-xs"></textarea>
-                            </div>
-<span id="hero-location">Noida | Ramsar</span>
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="map-pin" class="h-4 w-4"></i>
+                            <span id="hero-location">Noida | Ramsar</span>
                         </div>
                         <div class="w-px h-4 bg-white/10"></div>
                         <div class="flex items-center space-x-2">

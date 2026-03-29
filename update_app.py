@@ -1,17 +1,34 @@
 import os
 
-# Read the base64 photo
-with open('base64_photo.txt', 'r') as f:
-    b64 = f.read().strip()
+# Prepare the JS content for the optimized app.js
+js_content = r'''
+// Firebase Configuration Placeholder
+// REPLACE with your actual config from Firebase Console
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_ID",
+    appId: "YOUR_APP_ID"
+};
 
-# Prepare the JS content as a raw string
-js_template = r'''const DEFAULT_DATA = {
+// Initialize Firebase (Conditional)
+let db, storage;
+if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    storage = firebase.storage();
+    console.log("Firebase Initialized");
+}
+
+const DEFAULT_DATA = {
     profile: {
         name: "DR. SHAKIR PARVEJ",
         title: "ICU & EMERGENCY PHYSICIAN | HEALTHCARE AI ENTHUSIAST",
         location: "Noida Sector 62, 202010 | Ramsar 305402",
         bio: "Forward-thinking medical professional (MBBS, GMC Kota) with hands-on clinical experience in intensive care and emergency medicine across both public and private sector hospitals. Deeply passionate about the intersection of pathology, clinical care, and artificial intelligence. Proficient in Python and Rust, with a strategic vision to integrate advanced technology, data analytics, and programming into modern diagnostics and patient care.",
-        photo: "data:image/jpeg;base64,REPLACE_ME",
+        photo: "./portrait.jpg",
         education: "MBBS, GMC Kota, India (Graduated: July 2023)",
         languages: "English, Hindi, Urdu, Arabic"
     },
@@ -32,6 +49,10 @@ js_template = r'''const DEFAULT_DATA = {
         { level: "Upper Intermediate", tools: "Medidata Rave EDC, ArisGlobal Lifesphere, FHIR" },
         { level: "Intermediate", tools: "Rust, Python, Veeva Vault RIM" }
     ],
+    certificates: [
+        { name: "Medical AI Ethics Certificate", issuer: "Coursera/Stanford" },
+        { name: "Advanced Trauma Life Support", issuer: "AHA" }
+    ],
     interests: ["Avid Bird Watcher", "Bird Painting", "Nature Enthusiast", "Medical Ethics"],
     contact: {
         email: "acadmiana@gmail.com",
@@ -42,10 +63,31 @@ js_template = r'''const DEFAULT_DATA = {
     }
 };
 
-let state = JSON.parse(localStorage.getItem('shakir_portfolio_v4')) || DEFAULT_DATA;
+let state = JSON.parse(localStorage.getItem('shakir_portfolio_v5')) || DEFAULT_DATA;
 
 function saveStateToLocal() {
-    localStorage.setItem('shakir_portfolio_v4', JSON.stringify(state));
+    localStorage.setItem('shakir_portfolio_v5', JSON.stringify(state));
+    
+    // Sync to Firebase if cloud is ready
+    if (db) {
+        db.collection('portfolios').doc('shakir').set(state)
+            .then(() => console.log("Cloud Sync Successful"))
+            .catch(e => console.error("Cloud Sync Error", e));
+    }
+}
+
+async function loadFromCloud() {
+    if (db) {
+        try {
+            const doc = await db.collection('portfolios').doc('shakir').get();
+            if (doc.exists) {
+                state = doc.data();
+                render();
+            }
+        } catch (e) {
+            console.error("Error loading from cloud", e);
+        }
+    }
 }
 
 function render() {
@@ -118,6 +160,15 @@ function render() {
     if (contactWA) { contactWA.href = state.contact.whatsapp; }
 
     lucide.createIcons();
+
+    // Hide Loader
+    setTimeout(() => {
+        const loader = document.getElementById('loader');
+        if (loader) {
+            loader.style.opacity = '0';
+            setTimeout(() => loader.style.display = 'none', 800);
+        }
+    }, 500);
 }
 
 function downloadResumePDF() {
@@ -144,15 +195,24 @@ function populateFields() {
     document.getElementById('edit-location').value = state.profile.location;
     document.getElementById('edit-edu').value = state.profile.education;
     document.getElementById('edit-lang').value = state.profile.languages;
+    document.getElementById('edit-photo').value = state.profile.photo;
     document.getElementById('edit-email').value = state.contact.email;
     document.getElementById('edit-phone').value = state.contact.phone;
     document.getElementById('edit-experience').value = JSON.stringify(state.experience, null, 2);
     document.getElementById('edit-competencies').value = JSON.stringify(state.competencies, null, 2);
     document.getElementById('edit-software').value = JSON.stringify(state.software, null, 2);
     document.getElementById('edit-interests').value = JSON.stringify(state.interests, null, 2);
+    document.getElementById('edit-certificates').value = JSON.stringify(state.certificates || [], null, 2);
 }
 
-function saveChanges() {
+async function uploadFile(file) {
+    if (!storage) return null;
+    const ref = storage.ref().child('uploads/' + file.name);
+    const snapshot = await ref.put(file);
+    return await snapshot.ref.getDownloadURL();
+}
+
+async function saveChanges() {
     try {
         const newData = {
             profile: {
@@ -162,12 +222,13 @@ function saveChanges() {
                 location: document.getElementById('edit-location').value,
                 education: document.getElementById('edit-edu').value,
                 languages: document.getElementById('edit-lang').value,
-                photo: state.profile.photo
+                photo: document.getElementById('edit-photo').value
             },
             experience: JSON.parse(document.getElementById('edit-experience').value),
             competencies: JSON.parse(document.getElementById('edit-competencies').value),
             software: JSON.parse(document.getElementById('edit-software').value),
             interests: JSON.parse(document.getElementById('edit-interests').value),
+            certificates: JSON.parse(document.getElementById('edit-certificates').value),
             contact: {
                 email: document.getElementById('edit-email').value,
                 phone: document.getElementById('edit-phone').value,
@@ -203,13 +264,10 @@ document.getElementById('logo').onclick = (e) => {
     setTimeout(() => localStorage.setItem('admin_clicks', '0'), 2000);
 };
 
-document.addEventListener('DOMContentLoaded', render);
+document.addEventListener('DOMContentLoaded', () => {
+    loadFromCloud().then(render);
+});
 '''
 
-# Use replace to avoid f-string curly brace errors
-final_js = js_template.replace('REPLACE_ME', b64)
-
 with open('app.js', 'w', encoding='utf-8') as f:
-    f.write(final_js)
-
-print("app.js updated successfully")
+    f.write(js_content.strip())
