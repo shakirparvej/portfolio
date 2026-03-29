@@ -330,7 +330,28 @@ window.generateResumePDF = async () => {
         return currY + 6;
     });
 
-    doc.save(`Resume_Dr_Shakir_Parvej.pdf`);
+    addSection("Software & AI Mastery", state.software || [], (soft, currY) => {
+        doc.setFont("helvetica", "bold");
+        doc.text(`${soft.level}:`, 20, currY);
+        doc.setFont("helvetica", "normal");
+        doc.text(soft.tools, 60, currY);
+        return currY + 6;
+    });
+
+    addSection("Education & Details", [state.profile], (prof, currY) => {
+        doc.setFont("helvetica", "bold");
+        doc.text("Education:", 20, currY);
+        doc.setFont("helvetica", "normal");
+        doc.text(prof.education, 60, currY);
+        currY += 6;
+        doc.setFont("helvetica", "bold");
+        doc.text("Languages:", 20, currY);
+        doc.setFont("helvetica", "normal");
+        doc.text(state.profile.languages || "English, Hindi", 60, currY);
+        return currY + 6;
+    });
+
+    doc.save(`Resume_${state.profile.name.replace(/ /g, '_')}.pdf`);
 };
 
 const ICON_OPTIONS = ['activity', 'clipboard-list', 'stethoscope', 'brain', 'code', 'microscope', 'users', 'heart', 'drip', 'award', 'database', 'zap'];
@@ -404,31 +425,38 @@ function populateCMS() {
         `).join('');
     }
 
-    renderListEditor('experience-editor-list', state.experience, ['year', 'role', 'company', 'desc']);
-    renderListEditor('competencies-editor-list', state.competencies, ['icon', 'category', 'items']);
+    renderListEditor('experience-editor-list', state.experience, ['year', 'role', 'company', 'desc'], 'experience');
+    renderListEditor('competencies-editor-list', state.competencies, ['icon', 'category', 'items'], 'competencies');
+    renderListEditor('software-editor-list', state.software || [], ['level', 'tools'], 'software');
     renderCertificatesEditor();
 
     if (window.lucide) lucide.createIcons();
 }
 
-function renderListEditor(containerId, list, fields) {
+function renderListEditor(containerId, list, fields, stateKey) {
     const container = document.getElementById(containerId);
     if (!container) return;
     container.innerHTML = list.map((item, index) => `
         <div class="section-item p-4 bg-white/5 rounded-xl space-y-3 relative group">
-            <button onclick="removeItem('${containerId}', ${index})" class="absolute top-2 right-2 text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                <i data-lucide="trash-2" class="h-4 w-4"></i>
-            </button>
+            <div class="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onclick="moveItem('${stateKey}', ${index}, -1)" class="p-1 hover:text-cyan-400"><i data-lucide="chevron-up" class="h-3 w-3"></i></button>
+                <button onclick="moveItem('${stateKey}', ${index}, 1)" class="p-1 hover:text-cyan-400"><i data-lucide="chevron-down" class="h-3 w-3"></i></button>
+                <button onclick="removeItem('${stateKey}', ${index})" class="p-1 hover:text-red-500"><i data-lucide="trash-2" class="h-3 w-3"></i></button>
+            </div>
             <div class="grid gap-3">
                 ${fields.map(f => `
                     <div class="space-y-1">
                         <label class="text-[8px] uppercase tracking-widest text-gray-500">${f}</label>
                         ${f === 'icon' ? `
-                            <select onchange="updateItem('${containerId}', ${index}, '${f}', this.value)" class="admin-input py-1 text-xs">
+                            <select onchange="updateItem('${stateKey}', ${index}, '${f}', this.value)" class="admin-input py-1 text-xs">
                                 ${ICON_OPTIONS.map(opt => `<option value="${opt}" ${item[f] === opt ? 'selected' : ''}>${opt}</option>`).join('')}
                             </select>
+                        ` : f === 'level' ? `
+                            <select onchange="updateItem('${stateKey}', ${index}, '${f}', this.value)" class="admin-input py-1 text-xs">
+                                ${['Expert', 'Advanced', 'Intermediate', 'Beginner'].map(lv => `<option value="${lv}" ${item[f] === lv ? 'selected' : ''}>${lv}</option>`).join('')}
+                            </select>
                         ` : `
-                            <input type="text" value="${item[f] || ''}" onchange="updateItem('${containerId}', ${index}, '${f}', this.value)" class="admin-input py-1 text-xs">
+                            <input type="text" value="${item[f] || ''}" onchange="updateItem('${stateKey}', ${index}, '${f}', this.value)" class="admin-input py-1 text-xs">
                         `}
                     </div>
                 `).join('')}
@@ -442,18 +470,22 @@ function renderCertificatesEditor() {
     const container = document.getElementById('certificates-editor-list');
     if (!container) return;
     container.innerHTML = state.certificates.map((cert, index) => `
-        <div class="glass-card p-4 rounded-xl space-y-3 group relative">
+        <div class="glass-card p-4 rounded-xl space-y-3 group relative text-center">
+            <div class="absolute top-1 right-1 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity z-40">
+                <button onclick="moveItem('certificates', ${index}, -1)" class="p-1 bg-black/60 rounded hover:text-cyan-400"><i data-lucide="chevron-left" class="h-3 w-3"></i></button>
+                <button onclick="moveItem('certificates', ${index}, 1)" class="p-1 bg-black/60 rounded hover:text-cyan-400"><i data-lucide="chevron-right" class="h-3 w-3"></i></button>
+                <button onclick="removeItem('certificates', ${index})" class="p-1 bg-black/60 rounded hover:text-red-500"><i data-lucide="trash-2" class="h-3 w-3"></i></button>
+            </div>
             <div class="relative aspect-video rounded-lg overflow-hidden bg-black/40 border border-white/5">
                 <img id="cert-preview-${index}" src="${getAsset(cert.image, 'cert')}" class="w-full h-full object-cover">
                 <label id="cert-label-${index}" class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                     <i data-lucide="camera" class="h-4 w-4 mb-1"></i>
-                    <span class="text-[8px] uppercase font-bold">Update Doc</span>
+                    <span class="text-[8px] uppercase font-bold text-white">Resync</span>
                     <input type="file" onchange="uploadCert(${index}, this)" class="hidden" accept="image/*">
                 </label>
             </div>
             <input type="text" value="${cert.title}" placeholder="Title" onchange="state.certificates[${index}].title = this.value" class="admin-input py-1 text-xs">
             <input type="text" value="${cert.issuer}" placeholder="Issuer" onchange="state.certificates[${index}].issuer = this.value" class="admin-input py-1 text-xs">
-            <button onclick="removeItem('certificates-editor-list', ${index})" class="w-full py-2 text-[8px] uppercase font-bold text-red-400 bg-red-400/5 hover:bg-red-400/10 rounded-lg">Delete Certificate</button>
         </div>
     `).join('');
     lucide.createIcons();
@@ -481,43 +513,49 @@ window.uploadCert = async (index, input) => {
     }
 };
 
+window.moveItem = (category, index, direction) => {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= state[category].length) return;
+    const temp = state[category][index];
+    state[category][index] = state[category][targetIndex];
+    state[category][targetIndex] = temp;
+    populateCMS();
+};
+
 window.addItem = (category) => {
     const listMap = {
-        'experience-editor-list': { year: '2024', role: 'New Role', company: 'Company', desc: 'Description' },
-        'competencies-editor-list': { icon: 'activity', category: 'New Category', items: 'Skill 1, Skill 2' },
-        'certificates-editor-list': { title: 'New Certificate', issuer: 'Issuer', image: '' }
+        'experience': { year: '2024', role: 'New Role', company: 'Company', desc: 'Description' },
+        'competencies': { icon: 'activity', category: 'New Category', items: 'Skill 1, Skill 2' },
+        'certificates': { title: 'New Certificate', issuer: 'Issuer', image: '' },
+        'software': { level: 'Advanced', tools: 'New Tool' }
     };
-    const targetStateMap = {
-        'experience-editor-list': 'experience',
-        'competencies-editor-list': 'competencies',
-        'certificates-editor-list': 'certificates'
-    };
-    state[targetStateMap[category]].push(listMap[category]);
+    state[category].push(listMap[category]);
     populateCMS();
 };
 
 window.removeItem = (category, index) => {
-    const targetStateMap = {
-        'experience-editor-list': 'experience',
-        'competencies-editor-list': 'competencies',
-        'certificates-editor-list': 'certificates'
-    };
-    state[targetStateMap[category]].splice(index, 1);
+    state[category].splice(index, 1);
     populateCMS();
 };
 
 window.updateItem = (category, index, field, value) => {
-    const targetStateMap = {
-        'experience-editor-list': 'experience',
-        'competencies-editor-list': 'competencies',
-        'certificates-editor-list': 'certificates'
-    };
-    state[targetStateMap[category]][index][field] = value;
+    state[category][index][field] = value;
 };
 
-window.addExperienceItem = () => addItem('experience-editor-list');
-window.addCompetencyItem = () => addItem('competencies-editor-list');
-window.addCertificateItem = () => addItem('certificates-editor-list');
+window.createNewSection = () => {
+    const name = prompt("Enter Section Title:");
+    if (!name) return;
+    const id = name.toLowerCase().replace(/ /g, '-');
+    state.sections[id] = { visible: true };
+    state[id] = []; // Initialize empty list
+    alert(`New Section '${name}' added! Refresh to see structural changes.`);
+    populateCMS();
+};
+
+window.addExperienceItem = () => addItem('experience');
+window.addCompetencyItem = () => addItem('competencies');
+window.addCertificateItem = () => addItem('certificates');
+window.addSoftwareItem = () => addItem('software');
 
 window.saveChanges = async () => {
     try {
