@@ -15,6 +15,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <!-- Firebase SDK (v9 compatibility) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -75,10 +77,22 @@
                     <p class="text-gray-400 text-lg md:text-xl max-w-xl mx-auto lg:mx-0 font-light" id="hero-title-desc">ICU Physician | Health AI Enthusiast</p>
                     <div class="flex flex-wrap justify-center lg:justify-start gap-4 pt-4">
                         <a href="#contact" class="px-8 py-4 gradient-bg rounded-xl font-bold uppercase text-[10px] tracking-widest shadow-lg hover:brightness-110">Contact Dr.</a>
-                        <a href="#" class="download-resume px-8 py-4 glass-card rounded-xl font-bold uppercase text-[10px] tracking-widest flex items-center space-x-2"><i data-lucide="download" class="h-3 w-3"></i><span>Download Resume</span></a>
+                        <button onclick="generateResumePDF()" class="px-8 py-4 glass-card rounded-xl font-bold uppercase text-[10px] tracking-widest flex items-center space-x-2 hover:bg-white/5 transition-all">
+                            <i data-lucide="printer" class="h-3 w-3 text-cyan-400"></i>
+                            <span>Download Auto-Resume</span>
+                        </button>
                     </div>
                     <div class="flex items-center justify-center lg:justify-start space-x-6 pt-6 text-gray-500">
-                        <div class="flex items-center space-x-2"><i data-lucide="map-pin" class="h-4 w-4"></i><span class="text-xs uppercase font-bold tracking-wider" id="hero-location">Rajasthan | NCR</span></div>
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="map-pin" class="h-4 w-4"></i>
+                            <span class="text-xs uppercase font-bold tracking-wider" id="hero-location">Rajasthan | NCR</span>
+                        </div>
+                        <div class="flex items-center space-x-2 border-l border-white/10 pl-6">
+                            <a id="linkedin-link" href="#" target="_blank" class="flex items-center space-x-2 hover:text-cyan-400 transition-colors">
+                                <i data-lucide="linkedin" class="h-4 w-4"></i>
+                                <span class="text-[10px] uppercase font-bold tracking-[0.2em]">LinkedIn</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
                 <div class="order-1 lg:order-2 flex justify-center items-center">

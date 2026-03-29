@@ -4,22 +4,23 @@
  */
 
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    projectId: "YOUR_PROJECT",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "YOUR_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyCS488771dGxCZujO5GdLb4GQ__koM215Q",
+    authDomain: "portfolio-52a6e.firebaseapp.com",
+    projectId: "portfolio-52a6e",
+    storageBucket: "portfolio-52a6e.firebasestorage.app",
+    messagingSenderId: "25182923540",
+    appId: "1:25182923540:web:9cc9b0a418947e96b23001",
+    measurementId: "G-4YBPVXS2ZQ"
 };
 
-const VERSION = 'shakir_portfolio_v9';
+const VERSION = 'shakir_portfolio_v9_live';
 const DEFAULT_DATA = {
     profile: {
         name: "DR. SHAKIR PARVEJ",
         title: "ICU & EMERGENCY PHYSICIAN | HEALTHCARE AI ARCHITECT",
         location: "Noida Sector 62 | Rajasthan",
         bio: "Forward-thinking medical professional specializing in intensive care. Building the future of tech-driven healthcare with Python and Rust.",
-        photo: "./portrait.jpg",
+        photo: "https://ui-avatars.com/api/?name=Shakir+Parvej&background=06b6d4&color=fff&size=512",
         education: "MBBS, GMC Kota, India (2023)",
         languages: "English, Hindi, Urdu, Arabic",
         resumeUrl: "#",
@@ -44,13 +45,14 @@ const DEFAULT_DATA = {
         { level: "Advanced", tools: "ICD-11, SNOMED, LOINC" }
     ],
     certificates: [
-        { id: 1, title: "Critical Care Basic", issuer: "ICMR", image: "./portrait.jpg" }
+        { id: 1, title: "Critical Care Basic", issuer: "ICMR", image: "https://via.placeholder.com/600x400/06b6d4/ffffff?text=Certificate" }
     ],
     interests: ["Bird Watching", "AI Research"],
     contact: {
         email: "acadmiana@gmail.com",
         phone: "+91 77 2793 0382",
-        whatsapp: "https://wa.me/917727930382"
+        whatsapp: "https://wa.me/917727930382",
+        linkedin: "https://linkedin.com/in/shakir-parvej"
     }
 };
 
@@ -180,9 +182,13 @@ function renderMain() {
         </div>
     `);
 
-    // PDF Handlers
-    const dlBtns = document.querySelectorAll('.download-resume');
-    dlBtns.forEach(btn => btn.href = state.profile.resumeUrl || '#');
+    safeSet('contact-email', state.contact.email);
+    safeSet('contact-phone', state.contact.phone);
+    const linkedinLink = document.getElementById('linkedin-link');
+    if (linkedinLink) linkedinLink.href = state.contact.linkedin || '#';
+    
+    const waLink = document.getElementById('contact-whatsapp-link');
+    if (waLink) waLink.href = state.contact.whatsapp;
 
     if (window.lucide) lucide.createIcons();
     const loader = document.getElementById('loader');
@@ -191,6 +197,76 @@ function renderMain() {
         setTimeout(() => loader.style.display = 'none', 800);
     }
 }
+
+// --- Dynamic PDF Resume Engine ---
+window.generateResumePDF = async () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const primaryColor = [6, 182, 212]; // Cyan-500
+    
+    // Helper: Header
+    doc.setFillColor(5, 5, 5);
+    doc.rect(0, 0, 210, 40, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.setFont("helvetica", "bold");
+    doc.text(state.profile.name, 20, 20);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`${state.profile.title} | ${state.profile.location}`, 20, 28);
+    doc.text(`${state.contact.email} | ${state.contact.phone}`, 20, 34);
+
+    let y = 50;
+
+    const addSection = (title, items, renderFn) => {
+        if (!items || items.length === 0) return;
+        doc.setTextColor(...primaryColor);
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.text(title.toUpperCase(), 20, y);
+        y += 2;
+        doc.setDrawColor(...primaryColor);
+        doc.line(20, y, 190, y);
+        y += 8;
+        
+        doc.setTextColor(60, 60, 60);
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        
+        items.forEach(item => {
+            if (y > 270) { doc.addPage(); y = 20; }
+            y = renderFn(item, y);
+        });
+        y += 10;
+    };
+
+    addSection("Professional Experience", state.experience, (exp, currY) => {
+        doc.setFont("helvetica", "bold");
+        doc.text(`${exp.role} - ${exp.company}`, 20, currY);
+        doc.setFont("helvetica", "italic");
+        doc.text(exp.year, 190, currY, { align: 'right' });
+        currY += 5;
+        doc.setFont("helvetica", "normal");
+        const lines = doc.splitTextToSize(exp.desc, 160);
+        doc.text(lines, 25, currY);
+        return currY + (lines.length * 5) + 5;
+    });
+
+    addSection("Education", [{ edu: state.profile.education }], (item, currY) => {
+        doc.text(item.edu, 20, currY);
+        return currY + 6;
+    });
+
+    addSection("Competencies", state.competencies, (comp, currY) => {
+        doc.setFont("helvetica", "bold");
+        doc.text(`${comp.category}:`, 20, currY);
+        doc.setFont("helvetica", "normal");
+        doc.text(comp.items, 55, currY);
+        return currY + 6;
+    });
+
+    doc.save(`Resume_Dr_Shakir_Parvej.pdf`);
+};
 
 // --- CMS Logic (admin.html) ---
 function initAdmin() {
@@ -214,11 +290,12 @@ function initAdmin() {
                 const ref = storage.ref().child(`${statePath}/${Date.now()}_${file.name}`);
                 await ref.put(file);
                 const url = await ref.getDownloadURL();
-                // Deep set
+                
                 const keys = statePath.split('.');
                 let current = state;
                 for (let i = 0; i < keys.length - 1; i++) current = current[keys[i]];
                 current[keys[keys.length - 1]] = url;
+                
                 if (previewId) document.getElementById(previewId).src = url;
                 alert("Cloud Sync Successful!");
             } else {
@@ -226,7 +303,7 @@ function initAdmin() {
                 reader.onload = (re) => {
                     const keys = statePath.split('.');
                     let current = state;
-                    for (let i = 0; i < keys[i]; i++) current = current[keys[i]];
+                    for (let i = 0; i < keys.length - 1; i++) current = current[keys[i]];
                     current[keys[keys.length - 1]] = re.target.result;
                     if (previewId) document.getElementById(previewId).src = re.target.result;
                 };
@@ -237,11 +314,9 @@ function initAdmin() {
     };
 
     setupUpload('photo-upload', 'profile.photo', 'admin-profile-preview');
-    setupUpload('resume-upload', 'profile.resumeUrl', null);
 }
 
 function populateCMS() {
-    // Basic Info
     const setVal = (id, val) => { if (document.getElementById(id)) document.getElementById(id).value = val || ''; };
     setVal('edit-name', state.profile.name);
     setVal('edit-title', state.profile.title);
@@ -250,9 +325,9 @@ function populateCMS() {
     setVal('edit-edu-short', state.profile.education);
     setVal('edit-email', state.contact.email);
     setVal('edit-phone', state.contact.phone);
+    setVal('edit-linkedin', state.contact.linkedin);
     setVal('edit-logo-text', state.profile.logoText);
 
-    // Visibility Toggles
     const toggleContainer = document.getElementById('section-toggles');
     if (toggleContainer) {
         toggleContainer.innerHTML = Object.keys(state.sections).map(sectionId => `
@@ -265,7 +340,6 @@ function populateCMS() {
         `).join('');
     }
 
-    // Dynamic Lists
     renderListEditor('experience-editor-list', state.experience, ['year', 'role', 'company', 'desc']);
     renderListEditor('competencies-editor-list', state.competencies, ['icon', 'category', 'items']);
     renderListEditor('certificates-editor-list', state.certificates, ['title', 'issuer', 'image']);
@@ -298,7 +372,7 @@ window.addItem = (category) => {
     const listMap = {
         'experience-editor-list': { year: '2024', role: 'New Role', company: 'Company', desc: 'Description' },
         'competencies-editor-list': { icon: 'activity', category: 'New Category', items: 'Skill 1, Skill 2' },
-        'certificates-editor-list': { title: 'New Certificate', issuer: 'Issuer', image: './portrait.jpg' }
+        'certificates-editor-list': { title: 'New Certificate', issuer: 'Issuer', image: 'https://via.placeholder.com/600x400' }
     };
     const targetState = {
         'experience-editor-list': state.experience,
@@ -310,22 +384,22 @@ window.addItem = (category) => {
 };
 
 window.removeItem = (category, index) => {
-    const targetState = {
+    const targetStateMap = {
         'experience-editor-list': 'experience',
         'competencies-editor-list': 'competencies',
         'certificates-editor-list': 'certificates'
     };
-    state[targetState[category]].splice(index, 1);
+    state[targetStateMap[category]].splice(index, 1);
     populateCMS();
 };
 
 window.updateItem = (category, index, field, value) => {
-    const targetState = {
+    const targetStateMap = {
         'experience-editor-list': 'experience',
         'competencies-editor-list': 'competencies',
         'certificates-editor-list': 'certificates'
     };
-    state[targetState[category]][index][field] = value;
+    state[targetStateMap[category]][index][field] = value;
 };
 
 window.addExperienceItem = () => addItem('experience-editor-list');
@@ -342,6 +416,7 @@ window.saveChanges = async () => {
         state.profile.logoText = document.getElementById('edit-logo-text').value;
         state.contact.email = document.getElementById('edit-email').value;
         state.contact.phone = document.getElementById('edit-phone').value;
+        state.contact.linkedin = document.getElementById('edit-linkedin').value;
 
         localStorage.setItem(VERSION, JSON.stringify(state));
         if (db) await db.collection('portfolio').doc('main').set(state);
