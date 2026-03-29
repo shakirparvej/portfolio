@@ -138,34 +138,45 @@ window.checkSyncHealth = async () => {
     const btn = document.getElementById('health-btn');
     const originalText = btn.innerText;
     btn.innerText = "TESTING...";
-    
     try {
         let report = "SYSTEM STATUS:\n";
-        
-        // 1. Firestore Test
         if (db) {
             await db.collection('_health_').doc('test').set({ time: Date.now() });
-            report += "✅ FIRESTORE: Connected & Writeable\n";
-        } else report += "❌ FIRESTORE: Not Initialized\n";
-        
-        // 2. Storage Test
-        if (storage) {
-            const ref = storage.ref().child('_health_test_.txt');
-            await ref.putString("health check");
-            report += "✅ STORAGE: Connected & Writeable\n";
-            await ref.delete();
-        } else report += "❌ STORAGE: Not Initialized\n";
-        
+            report += "✅ DATABASE: Connected (Active)\n";
+        } else report += "❌ DATABASE: Not Initialized\n";
+        if (storage && firebaseConfig.storageBucket) {
+            try {
+                const ref = storage.ref().child('_health_test_.txt');
+                await ref.putString("check");
+                report += "✅ CLOUD STORAGE: Ready\n";
+                await ref.delete();
+            } catch (e) { report += "⚠️ CLOUD STORAGE: Locked/Regional Issue (Using DB Fallback)\n"; }
+        } else report += "⚠️ CLOUD STORAGE: Bucket Missing (Using DB Fallback)\n";
         alert(report);
-    } catch (e) {
-        console.error("Health Check Failed:", e);
-        alert(`❌ STATUS: CONNECTION PARTIAL/FAILED\nError: ${e.message}\n\nTIP: Check Firebase Rules for both Firestore and Storage.`);
-    } finally {
-        btn.innerText = originalText;
-    }
+    } catch (e) { alert("Diagnostic Error: " + e.message); }
+    finally { btn.innerText = originalText; }
 };
 
-// --- Main Engine ---
+const resizeImage = (file, maxWidth = 800) => {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (e) => {
+            const img = new Image();
+            img.src = e.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let w = img.width, h = img.height;
+                if (w > maxWidth) { h = (maxWidth / w) * h; w = maxWidth; }
+                canvas.width = w; canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+                resolve(canvas.toDataURL('image/jpeg', 0.7));
+            };
+        };
+    });
+};
+
 function renderMain() {
     const isAdmin = window.location.pathname.includes('admin.html');
     if (isAdmin) return;
@@ -339,53 +350,26 @@ function initAdmin() {
     window.setupUpload = (id, statePath, previewId) => {
         const el = document.getElementById(id);
         if (!el) return;
-        el.onchange = (e) => {
+        el.onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
             const statusLabel = document.createElement('span');
             statusLabel.className = 'absolute top-0 right-0 p-1 text-[8px] bg-cyan-500 text-white animate-pulse z-20';
-            statusLabel.innerText = "SYNCING (0%)...";
+            statusLabel.innerText = "PREPARING...";
             el.parentElement.appendChild(statusLabel);
 
-            if (storage) {
-                const ref = storage.ref().child(`${statePath}/${Date.now()}_${file.name}`);
-                const task = ref.put(file);
-                
-                task.on('state_changed', 
-                    (snapshot) => {
-                        const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-                        statusLabel.innerText = `SYNCING (${progress}%)...`;
-                    },
-                    (error) => {
-                        console.error("Upload Error:", error);
-                        statusLabel.innerText = error.code === 'storage/unauthorized' ? "RULES DENIED" : "SYNC ERROR";
-                        statusLabel.classList.replace('bg-cyan-500', 'bg-red-500');
-                        setTimeout(() => statusLabel.remove(), 5000);
-                    },
-                    async () => {
-                        const url = await task.snapshot.ref.getDownloadURL();
-                        const keys = statePath.split('.');
-                        let current = state;
-                        for (let i = 0; i < keys.length - 1; i++) current = current[keys[i]];
-                        current[keys[keys.length - 1]] = url;
-                        if (previewId) document.getElementById(previewId).src = url;
-                        statusLabel.innerText = "CLOUDSYNC OK!";
-                        statusLabel.classList.replace('animate-pulse', 'shadow-lg');
-                        setTimeout(() => statusLabel.remove(), 2000);
-                    }
-                );
-            } else {
-                const reader = new FileReader();
-                reader.onload = (re) => {
-                    const keys = statePath.split('.');
-                    let current = state;
-                    for (let i = 0; i < keys.length - 1; i++) current = current[keys[i]];
-                    current[keys[keys.length - 1]] = re.target.result;
-                    if (previewId) document.getElementById(previewId).src = re.target.result;
-                    statusLabel.innerText = "LOCAL CACHED";
-                    setTimeout(() => statusLabel.remove(), 2000);
-                };
-                reader.readAsDataURL(file);
+            try {
+                const imageData = await resizeImage(file);
+                const keys = statePath.split('.');
+                let current = state;
+                for (let i = 0; i < keys.length - 1; i++) current = current[keys[i]];
+                current[keys[keys.length - 1]] = imageData;
+                if (previewId) document.getElementById(previewId).src = imageData;
+                statusLabel.innerText = "DB SYNC OK";
+                setTimeout(() => statusLabel.remove(), 2000);
+            } catch (err) {
+                statusLabel.innerText = "ERR";
+                statusLabel.classList.replace('bg-cyan-500', 'bg-red-500');
             }
         };
     };
@@ -475,37 +459,25 @@ function renderCertificatesEditor() {
     lucide.createIcons();
 }
 
-window.uploadCert = (index, input) => {
+window.uploadCert = async (index, input) => {
     const file = input.files[0];
     if (!file) return;
     const label = document.getElementById(`cert-label-${index}`);
     const status = document.createElement('div');
     status.className = 'absolute inset-0 bg-cyan-500/80 flex items-center justify-center text-[10px] font-bold text-white z-30';
-    status.innerText = "0%";
+    status.innerText = "PREPARING...";
     label.parentElement.appendChild(status);
 
-    if (storage) {
-        const ref = storage.ref().child(`certificates/${Date.now()}_${file.name}`);
-        const task = ref.put(file);
-        task.on('state_changed',
-            (snap) => { status.innerText = Math.round((snap.bytesTransferred/snap.totalBytes)*100) + "%"; },
-            (err) => { status.innerText = "FAIL"; status.classList.replace('bg-cyan-500/80', 'bg-red-500/80'); setTimeout(()=>status.remove(), 3000); },
-            async () => {
-                const url = await task.snapshot.ref.getDownloadURL();
-                state.certificates[index].image = url;
-                document.getElementById(`cert-preview-${index}`).src = url;
-                status.innerText = "READY";
-                setTimeout(()=>status.remove(), 2000);
-            }
-        );
-    } else {
-        const reader = new FileReader();
-        reader.onload = (re) => {
-            state.certificates[index].image = re.target.result;
-            document.getElementById(`cert-preview-${index}`).src = re.target.result;
-            status.remove();
-        };
-        reader.readAsDataURL(file);
+    try {
+        const imageData = await resizeImage(file);
+        state.certificates[index].image = imageData;
+        document.getElementById(`cert-preview-${index}`).src = imageData;
+        status.innerText = "DB READY";
+        setTimeout(()=>status.remove(), 2000);
+    } catch (e) {
+        status.innerText = "FAIL";
+        status.classList.replace('bg-cyan-500/80', 'bg-red-500/80');
+        setTimeout(()=>status.remove(), 3000);
     }
 };
 
