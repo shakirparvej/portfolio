@@ -82,6 +82,21 @@
             transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
+        #experience-list::before {
+            content: '';
+            position: absolute;
+            left: 29px;
+            top: 10px;
+            bottom: 40px;
+            width: 2px;
+            background: linear-gradient(to bottom, transparent, rgba(6, 182, 212, 0.3) 15%, rgba(6, 182, 212, 0.3) 85%, transparent);
+            z-index: 10;
+        }
+
+        .timeline-item {
+            position: relative;
+        }
+
         #toast-container {
             position: fixed;
             top: 20px;
@@ -120,9 +135,9 @@
                 <a href="#contact" class="hover:text-white transition-colors">Contact</a>
             </div>
 
-            <div class="flex items-center space-x-4">
-                <a href="https://linkedin.com" id="nav-linkedin" class="flex items-center justify-center text-gray-400 hover:text-white transition-colors w-10 h-10 glass-card rounded-xl" target="_blank"><i data-lucide="linkedin"></i></a>
-                <a href="https://medexjob.com" id="nav-website" class="flex items-center justify-center text-gray-400 hover:text-white transition-colors w-10 h-10 glass-card rounded-xl" target="_blank"><i data-lucide="globe"></i></a>
+            <div class="flex items-center space-x-3">
+                <a href="https://wa.me/917727930382" target="_blank" class="flex items-center justify-center text-gray-400 hover:text-cyan-400 transition-colors w-10 h-10 glass-card rounded-xl group"><i data-lucide="message-circle" class="h-5 w-5 group-hover:scale-110 transition-transform"></i></a>
+                <a href="https://linkedin.com" id="nav-linkedin" class="flex items-center justify-center text-gray-400 hover:text-cyan-400 transition-colors w-10 h-10 glass-card rounded-xl group" target="_blank"><i data-lucide="linkedin" class="h-5 w-5 group-hover:scale-110 transition-transform"></i></a>
             </div>
         </div>
     </nav>
@@ -289,6 +304,16 @@
                                     <p class="text-lg font-medium" id="contact-phone">+91 77 2793 0382</p>
                                 </div>
                             </div>
+                            
+                            <div class="flex items-center space-x-4 group">
+                                <div class="w-12 h-12 glass-card rounded-2xl flex items-center justify-center text-cyan-400 group-hover:bg-cyan-500/10 transition-all">
+                                    <i data-lucide="message-circle"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 uppercase font-bold">WhatsApp</p>
+                                    <a href="https://wa.me/917727930382" id="contact-whatsapp-link" target="_blank" class="text-lg font-medium text-white hover:text-cyan-400 transition-colors">+91 77 2793 0382</a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -317,8 +342,8 @@
                 </div>
                 
                 <div class="flex items-center space-x-4">
-                    <a href="https://linkedin.com" target="_blank" class="flex items-center justify-center w-10 h-10 glass-card rounded-xl text-gray-400 hover:text-white hover:border-cyan-400/50 transition-all"><i data-lucide="linkedin" class="h-4 w-4"></i></a>
-                    <a href="https://medexjob.com" target="_blank" class="flex items-center justify-center w-10 h-10 glass-card rounded-xl text-gray-400 hover:text-white hover:border-cyan-400/50 transition-all"><i data-lucide="globe" class="h-4 w-4"></i></a>
+                    <a href="https://wa.me/917727930382" target="_blank" class="flex items-center justify-center w-10 h-10 glass-card rounded-xl text-gray-400 hover:text-cyan-400 hover:border-cyan-400/30 transition-all"><i data-lucide="message-circle" class="h-4 w-4"></i></a>
+                    <a href="https://linkedin.com" target="_blank" class="flex items-center justify-center w-10 h-10 glass-card rounded-xl text-gray-400 hover:text-cyan-400 hover:border-cyan-400/30 transition-all"><i data-lucide="linkedin" class="h-4 w-4"></i></a>
                 </div>
             </div>
         </footer>
