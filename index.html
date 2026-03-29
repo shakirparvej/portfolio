@@ -15,7 +15,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     
     <!-- Firebase SDK (v9 compatibility) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -23,96 +22,25 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
     
     <style>
-        :root {
-            --accent: #06b6d4;
-            --accent-glow: rgba(6, 182, 212, 0.3);
-        }
-        
-        body {
-            background-color: #050505;
-            color: #ffffff;
-            font-family: 'Space Grotesk', sans-serif;
-            overflow-x: hidden;
-        }
-
-        .grid-background {
-            background-image: linear-gradient(rgba(6, 182, 212, 0.05) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(6, 182, 212, 0.05) 1px, transparent 1px);
-            background-size: 40px 40px;
-        }
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.02);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .glass-card:hover {
-            border-color: rgba(6, 182, 212, 0.3);
-            background: rgba(255, 255, 255, 0.04);
-            transform: translateY(-5px);
-        }
-
-        .gradient-text {
-            background: linear-gradient(to right, #06b6d4, #a855f7);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .gradient-bg {
-            background: linear-gradient(135deg, #06b6d4, #8b5cf6);
-        }
-
-        /* Timeline Styles */
-        #experience-list::before {
-            content: '';
-            position: absolute;
-            left: 20px;
-            top: 0;
-            bottom: 0;
-            width: 1px;
-            background: linear-gradient(to bottom, transparent, rgba(6, 182, 212, 0.5), transparent);
-        }
-
-        #loader {
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-            background: #050505;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.8s ease;
-        }
-
-        .loader-ring {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            border: 2px solid rgba(6, 182, 212, 0.1);
-            border-top-color: #06b6d4;
-            animation: spin 1s linear infinite;
-        }
-
+        :root { --accent: #06b6d4; }
+        body { background-color: #050505; color: #ffffff; font-family: 'Space Grotesk', sans-serif; overflow-x: hidden; }
+        .grid-background { background-image: linear-gradient(rgba(6, 182, 212, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(6, 182, 212, 0.05) 1px, transparent 1px); background-size: 40px 40px; }
+        .glass-card { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .glass-card:hover { border-color: rgba(6, 182, 212, 0.3); background: rgba(255, 255, 255, 0.04); transform: translateY(-5px); }
+        .gradient-text { background: linear-gradient(to right, #06b6d4, #a855f7); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        .gradient-bg { background: linear-gradient(135deg, #06b6d4, #8b5cf6); }
+        #experience-list::before { content: ''; position: absolute; left: 20px; top: 0; bottom: 0; width: 1px; background: linear-gradient(to bottom, transparent, rgba(6, 182, 212, 0.5), transparent); }
+        #loader { position: fixed; inset: 0; z-index: 9999; background: #050505; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.8s ease; }
+        .loader-ring { width: 60px; height: 60px; border-radius: 50%; border: 2px solid rgba(6, 182, 212, 0.1); border-top-color: #06b6d4; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        .mobile-only { display: none; }
-        @media (max-width: 768px) {
-            .mobile-only { display: block; }
-            .desktop-only { display: none; }
-        }
     </style>
 </head>
 <body class="selection:bg-cyan-500/30 selection:text-cyan-400">
 
+    <!-- Loader -->
     <div id="loader">
         <div class="loader-ring mb-6"></div>
-        <div class="text-cyan-400 font-bold text-lg tracking-widest animate-pulse">LOADING PROFILE</div>
+        <div class="text-cyan-400 font-bold text-lg tracking-widest animate-pulse uppercase">Syncing Medical Vault</div>
     </div>
 
     <div class="fixed inset-0 grid-background pointer-events-none z-0"></div>
@@ -120,24 +48,20 @@
     <nav class="fixed top-0 left-0 right-0 z-50 flex justify-center py-4 px-4">
         <div class="glass-card rounded-2xl px-6 py-3 flex items-center justify-between max-w-5xl w-full">
             <a href="#" class="font-bold text-xl tracking-tighter" id="logo">SP<span class="text-cyan-400">.</span></a>
-            
-            <div class="hidden md:flex space-x-6 text-xs uppercase tracking-widest font-semibold text-gray-400">
-                <a href="#hero" class="hover:text-cyan-400 transition-colors">Home</a>
-                <a href="#about" class="hover:text-cyan-400 transition-colors">About</a>
-                <a href="#experience" class="hover:text-cyan-400 transition-colors">Path</a>
-                <a href="#contact" class="hover:text-cyan-400 transition-colors">Contact</a>
+            <div class="hidden md:flex space-x-6 text-[10px] uppercase tracking-widest font-semibold text-gray-400">
+                <a href="#hero" class="hover:text-cyan-400">Home</a>
+                <a href="#about" class="hover:text-cyan-400">About</a>
+                <a href="#experience" class="hover:text-cyan-400">Path</a>
+                <a href="#certificates" class="hover:text-cyan-400">Awards</a>
+                <a href="#contact" class="hover:text-cyan-400">Contact</a>
             </div>
-
-            <div class="flex items-center space-x-3">
-                <a href="https://wa.me/917727930382" target="_blank" class="w-10 h-10 flex items-center justify-center glass-card rounded-xl text-cyan-400"><i data-lucide="message-circle" class="h-4 w-4"></i></a>
-                <a href="/admin.html" class="hidden md:flex w-10 h-10 items-center justify-center glass-card rounded-xl text-gray-500 hover:text-white"><i data-lucide="settings" class="h-4 w-4"></i></a>
-            </div>
+            <a href="https://wa.me/917727930382" target="_blank" class="w-10 h-10 flex items-center justify-center glass-card rounded-xl text-cyan-400"><i data-lucide="message-circle" class="h-4 w-4"></i></a>
         </div>
     </nav>
 
     <main class="relative z-10">
         <!-- Hero Section -->
-        <section id="hero" class="min-h-screen flex items-center container mx-auto px-6 py-12 md:py-24">
+        <section id="hero" class="min-h-screen flex items-center container mx-auto px-6 py-12 pt-32 md:py-24 md:pt-12">
             <div class="grid lg:grid-cols-2 gap-12 items-center w-full">
                 <div class="space-y-8 order-2 lg:order-1 text-center lg:text-left">
                     <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full border border-cyan-500/20 bg-cyan-500/5 text-cyan-400 text-[10px] font-bold uppercase tracking-[0.3em] mx-auto lg:mx-0">
@@ -147,36 +71,16 @@
                         </span>
                         <span>Med-Tech Innovator</span>
                     </div>
-                    
-                    <h1 class="text-5xl md:text-6xl lg:text-8xl font-bold tracking-tighter leading-[0.9]" id="hero-name">
-                        SHAKIR <br> <span class="gradient-text">PARVEJ.</span>
-                    </h1>
-                    
-                    <p class="text-gray-400 text-lg md:text-xl max-w-xl mx-auto lg:mx-0 leading-relaxed font-light" id="hero-title-desc">
-                        ICU Physician merging Clinical Excellence with Artificial Intelligence.
-                    </p>
-
+                    <h1 class="text-5xl md:text-6xl lg:text-8xl font-bold tracking-tighter leading-[0.9]" id="hero-name">SHAKIR <br> <span class="gradient-text">PARVEJ.</span></h1>
+                    <p class="text-gray-400 text-lg md:text-xl max-w-xl mx-auto lg:mx-0 font-light" id="hero-title-desc">ICU Physician | Health AI Enthusiast</p>
                     <div class="flex flex-wrap justify-center lg:justify-start gap-4 pt-4">
-                        <a href="#contact" class="px-8 py-4 gradient-bg rounded-xl font-bold uppercase text-xs tracking-widest shadow-lg hover:brightness-110 transition-all">
-                            Contact Doctor
-                        </a>
-                        <a href="/admin.html" class="md:hidden px-8 py-4 glass-card rounded-xl font-bold uppercase text-xs tracking-widest">
-                            Admin Login
-                        </a>
+                        <a href="#contact" class="px-8 py-4 gradient-bg rounded-xl font-bold uppercase text-[10px] tracking-widest shadow-lg hover:brightness-110">Contact Dr.</a>
+                        <a href="#" class="download-resume px-8 py-4 glass-card rounded-xl font-bold uppercase text-[10px] tracking-widest flex items-center space-x-2"><i data-lucide="download" class="h-3 w-3"></i><span>Download Resume</span></a>
                     </div>
-
                     <div class="flex items-center justify-center lg:justify-start space-x-6 pt-6 text-gray-500">
-                        <div class="flex items-center space-x-2">
-                            <i data-lucide="map-pin" class="h-4 w-4"></i>
-                            <span class="text-xs uppercase font-bold tracking-wider" id="hero-location">Rajasthan | NCR</span>
-                        </div>
-                        <div class="flex items-center space-x-2 border-l border-white/10 pl-6">
-                            <i data-lucide="award" class="h-4 w-4"></i>
-                            <span class="text-xs uppercase font-bold tracking-wider">MBBS · GMC Kota</span>
-                        </div>
+                        <div class="flex items-center space-x-2"><i data-lucide="map-pin" class="h-4 w-4"></i><span class="text-xs uppercase font-bold tracking-wider" id="hero-location">Rajasthan | NCR</span></div>
                     </div>
                 </div>
-
                 <div class="order-1 lg:order-2 flex justify-center items-center">
                     <div class="relative w-64 h-64 md:w-80 md:h-80 lg:w-[450px] lg:h-[450px]">
                         <div class="absolute inset-0 bg-cyan-500/10 blur-[100px] rounded-full animate-pulse"></div>
@@ -190,115 +94,41 @@
 
         <!-- About Section -->
         <section id="about" class="py-12 md:py-24 container mx-auto px-6">
-            <div class="max-w-4xl mx-auto space-y-12">
-                <div class="grid md:grid-cols-2 gap-12">
-                    <h2 class="text-4xl md:text-5xl font-bold leading-none tracking-tighter">
-                        Clinical Skill <br> meets <span class="gradient-text">Software Edge.</span>
-                    </h2>
-                    <p class="text-gray-400 text-lg md:text-xl font-light leading-relaxed" id="about-bio">
-                        Physician specializing in intensive care with a technical foundation in Python & Rust. Focused on building production-ready AI solutions for complex medical diagnostics.
-                    </p>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="glass-card p-8 rounded-2xl">
-                        <i data-lucide="stethoscope" class="text-cyan-400 h-8 w-8 mb-4"></i>
-                        <h4 class="font-bold mb-2">Education</h4>
-                        <p class="text-sm text-gray-500" id="about-edu">MBBS, GMC Kota</p>
-                    </div>
-                    <div class="glass-card p-8 rounded-2xl">
-                        <i data-lucide="globe" class="text-purple-400 h-8 w-8 mb-4"></i>
-                        <h4 class="font-bold mb-2">Languages</h4>
-                        <p class="text-sm text-gray-500" id="about-lang">English, Hindi, Arabic</p>
-                    </div>
-                    <div class="glass-card p-8 rounded-2xl">
-                        <i data-lucide="code" class="text-cyan-400 h-8 w-8 mb-4"></i>
-                        <h4 class="font-bold mb-2">Tech Stack</h4>
-                        <p class="text-sm text-gray-500">Python, Rust, DS</p>
-                    </div>
-                </div>
+            <div class="max-w-4xl mx-auto grid md:grid-cols-2 gap-12">
+                <h2 class="text-4xl md:text-5xl font-bold tracking-tighter">Clinical Skill meets <span class="gradient-text">Software Edge.</span></h2>
+                <p class="text-gray-400 text-lg font-light leading-relaxed" id="about-bio">Physician specializing in intensive care with a passion for integrating AI into modern diagnostics.</p>
             </div>
         </section>
 
-        <!-- Experience -->
-        <section id="experience" class="py-12 md:py-24 container mx-auto px-6">
-            <div class="grid lg:grid-cols-2 gap-20">
-                <div class="space-y-12">
-                    <div class="space-y-4">
-                        <span class="text-cyan-400 text-xs font-bold uppercase tracking-[0.3em]">The Path</span>
-                        <h3 class="text-4xl font-bold tracking-tighter">Professional Journey.</h3>
-                    </div>
-                    <div id="experience-list" class="space-y-12 relative pl-8">
-                        <!-- Injected by JS -->
-                    </div>
-                </div>
-                
-                <div class="space-y-12">
-                    <div class="space-y-4 text-right">
-                        <span class="text-purple-400 text-xs font-bold uppercase tracking-[0.3em]">Mastery</span>
-                        <h3 class="text-4xl font-bold tracking-tighter">Core Competencies.</h3>
-                    </div>
-                    <div id="competencies-grid" class="grid sm:grid-cols-2 gap-4">
-                        <!-- Injected by JS -->
-                    </div>
-                </div>
-            </div>
-        </section>
+        <!-- Experience & Competencies -->
+        <div class="container mx-auto px-6 mb-24 space-y-24">
+            <section id="experience" class="grid lg:grid-cols-2 gap-20">
+                <div class="space-y-8"><h3 class="text-4xl font-bold tracking-tighter">Professional Path.</h3><div id="experience-list" class="space-y-12 relative pl-8"></div></div>
+                <div id="competencies" class="space-y-8"><h3 class="text-4xl font-bold tracking-tighter text-right">Core Competencies.</h3><div id="competencies-grid" class="grid sm:grid-cols-2 gap-4"></div></div>
+            </section>
 
-        <!-- Software -->
-        <section id="software" class="py-12 md:py-24 container mx-auto px-6">
-            <div class="text-center mb-16 px-4">
-                <h2 class="text-3xl md:text-5xl font-bold tracking-tighter">Tools & <span class="gradient-text">Systems.</span></h2>
-            </div>
-            <div id="software-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- Injected by JS -->
-            </div>
-        </section>
+            <!-- Certificates Gallery (New) -->
+            <section id="certificates" class="space-y-8">
+                <div class="flex justify-between items-end"><h3 class="text-4xl font-bold tracking-tighter">Digital <span class="gradient-text">Credentials.</span></h3><p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Verified Certificates</p></div>
+                <div id="certificates-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            </section>
 
-        <!-- Contact Section -->
+            <section id="software" class="space-y-8 text-center"><h3 class="text-4xl font-bold tracking-tighter">Software <span class="gradient-text">Mastery.</span></h3><div id="software-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div></section>
+        </div>
+
+        <!-- Contact -->
         <section id="contact" class="py-12 md:py-24 container mx-auto px-6 mb-24">
             <div class="glass-card rounded-[2rem] md:rounded-[3rem] p-8 md:p-20 relative overflow-hidden">
                 <div class="absolute inset-0 bg-cyan-500/5 backdrop-blur-3xl"></div>
                 <div class="grid lg:grid-cols-2 gap-12 relative z-10">
-                    <div class="space-y-8">
-                        <h2 class="text-5xl font-bold tracking-tighter italic"><span class="gradient-text">Innovate</span> <br> with me.</h2>
-                        <div class="space-y-6">
-                            <div class="flex items-center space-x-4">
-                                <div class="w-12 h-12 glass-card rounded-xl flex items-center justify-center text-cyan-400"><i data-lucide="mail" class="h-5 w-5"></i></div>
-                                <div>
-                                    <p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Email</p>
-                                    <p class="font-medium" id="contact-email">acadmiana@gmail.com</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center space-x-4">
-                                <div class="w-12 h-12 glass-card rounded-xl flex items-center justify-center text-cyan-400"><i data-lucide="phone" class="h-5 w-5"></i></div>
-                                <div>
-                                    <p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Mobile</p>
-                                    <p class="font-medium" id="contact-phone">+91 77 2793 0382</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <form class="space-y-4" id="contact-form">
-                        <input type="text" placeholder="Full Name" class="w-full bg-white/5 border border-white/5 rounded-xl px-6 py-4 focus:outline-none focus:border-cyan-500/30 transition-all">
-                        <input type="email" placeholder="Email Address" class="w-full bg-white/5 border border-white/5 rounded-xl px-6 py-4 focus:outline-none focus:border-cyan-500/30 transition-all">
-                        <textarea placeholder="Your Message" rows="4" class="w-full bg-white/5 border border-white/5 rounded-xl px-6 py-4 focus:outline-none focus:border-cyan-500/30 transition-all resize-none"></textarea>
-                        <button type="submit" class="w-full py-5 gradient-bg rounded-xl font-bold uppercase tracking-widest text-xs hover:brightness-110 transition-all">Send Inquiry</button>
-                    </form>
+                    <div class="space-y-8"><h2 class="text-5xl font-bold tracking-tighter italic">Let's <span class="gradient-text">Innovate.</span></h2><div class="space-y-4"><p id="contact-email" class="text-lg font-medium">acadmiana@gmail.com</p><p id="contact-phone" class="text-lg font-medium">+91 7727930382</p></div></div>
+                    <form class="space-y-4" id="contact-form"><input type="text" placeholder="Name" class="w-full bg-white/5 border border-white/5 rounded-xl px-6 py-4 focus:border-cyan-500/30 outline-none"><textarea placeholder="Inquiry" rows="4" class="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-4 focus:border-cyan-500/30 outline-none resize-none"></textarea><button type="submit" class="w-full py-5 gradient-bg rounded-xl font-bold uppercase tracking-widest text-[10px]">Send Message</button></form>
                 </div>
             </div>
         </section>
     </main>
 
-    <footer class="py-12 border-t border-white/5">
-        <div class="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
-            <p class="text-gray-500 text-sm">© 2024 DR. SHAKIR PARVEJ. ALL RIGHTS RESERVED.</p>
-            <div class="flex space-x-4">
-                <a href="https://linkedin.com" target="_blank" class="w-10 h-10 glass-card rounded-xl flex items-center justify-center text-gray-500 hover:text-cyan-400"><i data-lucide="linkedin" class="h-4 w-4"></i></a>
-                <a href="https://wa.me/917727930382" target="_blank" class="w-10 h-10 glass-card rounded-xl flex items-center justify-center text-gray-500 hover:text-cyan-400"><i data-lucide="message-circle" class="h-4 w-4"></i></a>
-            </div>
-        </div>
-    </footer>
+    <footer class="py-12 border-t border-white/5"><div class="container mx-auto px-6 flex justify-between items-center"><p class="text-gray-500 text-[10px]">&copy; 2024 DR. SHAKIR PARVEJ</p><a href="#" class="download-resume text-cyan-400 text-[10px] font-bold uppercase tracking-widest">Download Resume</a></div></footer>
 
     <script src="app.js"></script>
 </body>

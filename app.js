@@ -1,6 +1,6 @@
 /**
- * Dr. Shakir Parvej | Premium Portfolio Engine V8
- * Optimized for Mobile Responsiveness & Firebase Realtime-Sync
+ * Dr. Shakir Parvej | Premium Portfolio CMS V9 (Stable)
+ * Dynamic Form Editor + Section Visibility + Certificate Management
  */
 
 const firebaseConfig = {
@@ -12,32 +12,41 @@ const firebaseConfig = {
     appId: "YOUR_APP_ID"
 };
 
-// State Versioning
-const VERSION = 'shakir_portfolio_v8';
+const VERSION = 'shakir_portfolio_v9';
 const DEFAULT_DATA = {
     profile: {
         name: "DR. SHAKIR PARVEJ",
         title: "ICU & EMERGENCY PHYSICIAN | HEALTHCARE AI ARCHITECT",
         location: "Noida Sector 62 | Rajasthan",
-        bio: "Forward-thinking medical professional with hands-on clinical experience in intensive care. Deeply passionate about the intersection of pathology, clinical care, and artificial intelligence. Proficient in Python and Rust, building the future of diagnostics.",
+        bio: "Forward-thinking medical professional specializing in intensive care. Building the future of tech-driven healthcare with Python and Rust.",
         photo: "./portrait.jpg",
         education: "MBBS, GMC Kota, India (2023)",
-        languages: "English, Hindi, Urdu, Arabic"
+        languages: "English, Hindi, Urdu, Arabic",
+        resumeUrl: "#",
+        logoText: "SP."
+    },
+    sections: {
+        hero: { visible: true, order: 1 },
+        about: { visible: true, order: 2 },
+        experience: { visible: true, order: 3 },
+        competencies: { visible: true, order: 4 },
+        certificates: { visible: true, order: 5 },
+        software: { visible: true, order: 6 },
+        contact: { visible: true, order: 7 }
     },
     experience: [
-        { id: 1, year: "Nov 2025 - Present", role: "Lead Associate Medical Trainer", company: "Innodata Inc.", desc: "Leading medical AI annotation and training teams." },
-        { id: 2, year: "July 2025 - Present", role: "Founder", company: "MedicMart", desc: "Spearheading a new healthcare commerce initiative." },
-        { id: 3, year: "July 2024 - Jan 2025", role: "ICU Resident", company: "Govind Hospital", desc: "Critical care management for ICU patients." }
+        { id: 1, year: "Nov 2025 - Present", role: "Lead Associate Medical Trainer", company: "Innodata Inc.", desc: "Leading medical AI training teams." }
     ],
     competencies: [
-        { id: 1, icon: "activity", category: "Clinical", items: "Intubation, Central Line, ICU Care" },
-        { id: 2, icon: "database", category: "Technical", items: "Rust, Python, Medical AI" }
+        { id: 1, icon: "activity", category: "Clinical", items: "Intubation, Central Line, ICU Care" }
     ],
     software: [
-        { level: "Advanced", tools: "ICD-11, SNOMED, LOINC" },
-        { level: "Intermediate", tools: "Medidata, FHIR, Python" }
+        { level: "Advanced", tools: "ICD-11, SNOMED, LOINC" }
     ],
-    interests: ["Bird Watching", "Medical Ethics", "AI Research"],
+    certificates: [
+        { id: 1, title: "Critical Care Basic", issuer: "ICMR", image: "./portrait.jpg" }
+    ],
+    interests: ["Bird Watching", "AI Research"],
     contact: {
         email: "acadmiana@gmail.com",
         phone: "+91 77 2793 0382",
@@ -48,17 +57,20 @@ const DEFAULT_DATA = {
 let state = DEFAULT_DATA;
 let db, storage;
 
-// Initialization
 document.addEventListener('DOMContentLoaded', () => {
     initFirebase();
     loadState();
     
-    // Page Detection
-    const isAdminPage = window.location.pathname.includes('admin.html');
-    if (isAdminPage) {
-        initAdmin();
-    } else {
-        renderMain();
+    // Triple-Tap Logo Logic
+    const logoEl = document.getElementById('logo');
+    let clicks = 0;
+    if (logoEl) {
+        logoEl.onclick = (e) => {
+            e.preventDefault();
+            clicks++;
+            if (clicks >= 3) { window.location.href = 'admin.html'; clicks = 0; }
+            setTimeout(() => clicks = 0, 2000);
+        };
     }
 });
 
@@ -68,53 +80,61 @@ function initFirebase() {
             firebase.initializeApp(firebaseConfig);
             db = firebase.firestore();
             storage = firebase.storage();
-            console.log("Firebase Active");
         }
-    } catch (e) { console.error("Firebase Error:", e); }
+    } catch (e) { console.error("Firebase Init Error:", e); }
 }
 
 async function loadState() {
-    // 1. Local Load
     const local = localStorage.getItem(VERSION);
     if (local) state = JSON.parse(local);
 
-    // 2. Cloud Fallback/Sync
     if (db) {
         try {
             const doc = await db.collection('portfolio').doc('main').get();
             if (doc.exists) {
                 state = doc.data();
                 localStorage.setItem(VERSION, JSON.stringify(state));
-                if (!window.location.pathname.includes('admin.html')) renderMain();
             }
-        } catch (e) { console.warn("Cloud Sync Offline"); }
+        } catch (e) { console.warn("Cloud Load Failed"); }
     }
+
+    const isAdmin = window.location.pathname.includes('admin.html');
+    isAdmin ? initAdmin() : renderMain();
 }
 
-// --- Main Content Rendering (index.html) ---
+// --- Main Engine ---
 function renderMain() {
+    const isAdmin = window.location.pathname.includes('admin.html');
+    if (isAdmin) return;
+
+    // Logo & Navbar
     const safeSet = (id, val, attr = 'innerText') => {
         const el = document.getElementById(id);
         if (el) el[attr] = val || '';
     };
 
-    // Hero Refinement
+    safeSet('logo', state.profile.logoText);
+    
+    // Visibility Filters
+    Object.keys(state.sections).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = state.sections[id].visible ? 'block' : 'none';
+    });
+
+    // Content
     const nameParts = (state.profile.name || "").split(' ');
     const first = nameParts.slice(0, 2).join(' ');
-    const second = nameParts.slice(2).join(' ');
+    const last = nameParts.slice(2).join(' ');
     const heroName = document.getElementById('hero-name');
-    if (heroName) heroName.innerHTML = `${first} <br> <span class="gradient-text">${second}.</span>`;
+    if (heroName) heroName.innerHTML = `${first} <br> <span class="gradient-text">${last}.</span>`;
 
     safeSet('hero-title-desc', state.profile.title);
     safeSet('hero-location', state.profile.location);
     safeSet('profile-img', state.profile.photo, 'src');
-
-    // Stats/About
     safeSet('about-bio', state.profile.bio);
     safeSet('about-edu', state.profile.education);
-    safeSet('about-lang', state.profile.languages);
 
-    // Lists
+    // List Injections
     const inject = (id, list, htmlFn) => {
         const el = document.getElementById(id);
         if (el && list) el.innerHTML = list.map(htmlFn).join('');
@@ -122,50 +142,49 @@ function renderMain() {
 
     inject('experience-list', state.experience, exp => `
         <div class="relative pl-10 pb-10 group">
-            <div class="absolute left-[-2px] top-1.5 w-3 h-3 rounded-full border border-cyan-500 bg-[#050505] z-10 group-hover:bg-cyan-500 transition-colors"></div>
+            <div class="absolute left-[-2px] top-1.5 w-3 h-3 rounded-full border border-cyan-500 bg-[#050505] z-10 group-hover:bg-cyan-500"></div>
             <p class="text-[10px] font-bold text-cyan-500/60 uppercase tracking-widest">${exp.year}</p>
             <h4 class="text-xl font-bold group-hover:text-cyan-400 transition-colors">${exp.role}</h4>
-            <p class="text-xs text-gray-500 font-medium">${exp.company}</p>
+            <p class="text-xs text-gray-400 opacity-60">${exp.company}</p>
             <p class="text-xs text-gray-500 mt-2 font-light leading-relaxed">${exp.desc}</p>
         </div>
     `);
 
     inject('competencies-grid', state.competencies, comp => `
-        <div class="glass-card p-6 rounded-2xl group">
+        <div class="glass-card p-6 rounded-2xl">
             <div class="flex items-center space-x-3 mb-4">
-                <div class="text-cyan-400"><i data-lucide="${comp.icon}" class="h-4 w-4"></i></div>
+                <i data-lucide="${comp.icon}" class="h-4 w-4 text-cyan-400"></i>
                 <h4 class="text-sm font-bold uppercase tracking-widest">${comp.category}</h4>
             </div>
-            <div class="flex flex-wrap gap-2">
-                ${comp.items.split(',').map(i => `<span class="px-2 py-1 bg-white/5 border border-white/5 rounded-md text-[10px] text-gray-400">${i.trim()}</span>`).join('')}
+            <p class="text-xs text-gray-500 leading-relaxed">${comp.items}</p>
+        </div>
+    `);
+
+    inject('certificates-grid', state.certificates || [], cert => `
+        <div class="glass-card p-4 rounded-2xl group cursor-pointer hover:border-cyan-500/40 transition-all">
+            <div class="aspect-video rounded-xl overflow-hidden mb-4 border border-white/5 relative">
+                <img src="${cert.image}" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                    <i data-lucide="zoom-in" class="h-6 w-6 text-white"></i>
+                </div>
             </div>
+            <h4 class="font-bold text-sm mb-1">${cert.title}</h4>
+            <p class="text-[10px] text-gray-500 uppercase tracking-widest">${cert.issuer}</p>
         </div>
     `);
 
     inject('software-grid', state.software, soft => `
-        <div class="glass-card p-6 rounded-2xl space-y-2">
-            <p class="text-[10px] font-bold text-purple-400 uppercase tracking-widest">${soft.level}</p>
-            <div class="flex flex-wrap gap-2 text-xs text-gray-400">
-                ${soft.tools.split(',').map(t => `<span class="flex items-center"><i data-lucide="check" class="h-3 w-3 mr-1 text-cyan-500"></i>${t.trim()}</span>`).join(' ')}
-            </div>
+        <div class="glass-card p-6 rounded-2xl">
+            <p class="text-[10px] uppercase tracking-widest font-bold text-purple-400 mb-2">${soft.level}</p>
+            <p class="text-sm text-gray-400 font-medium">${soft.tools}</p>
         </div>
     `);
 
-    inject('interests-grid', state.interests, int => `
-        <span class="px-3 py-1 glass-card rounded-full text-[10px] text-gray-500">${int}</span>
-    `);
-
-    // Contact
-    safeSet('contact-email', state.contact.email);
-    safeSet('contact-phone', state.contact.phone);
-    const waLink = document.getElementById('contact-whatsapp-link');
-    if (waLink) waLink.href = state.contact.whatsapp;
+    // PDF Handlers
+    const dlBtns = document.querySelectorAll('.download-resume');
+    dlBtns.forEach(btn => btn.href = state.profile.resumeUrl || '#');
 
     if (window.lucide) lucide.createIcons();
-    hideLoader();
-}
-
-function hideLoader() {
     const loader = document.getElementById('loader');
     if (loader) {
         loader.style.opacity = '0';
@@ -173,68 +192,145 @@ function hideLoader() {
     }
 }
 
-// --- Admin Console Logic (admin.html) ---
-window.verifyAuth = () => {
-    const pwd = document.getElementById('admin-password').value;
-    if (pwd === 'Ramsar@305402') {
-        document.getElementById('admin-auth').classList.add('hidden');
-        document.getElementById('admin-dashboard').classList.remove('hidden');
-        populateAdminFields();
-    } else {
-        alert("Authorization Failed.");
-    }
-};
-
-function populateAdminFields() {
-    const setVal = (id, val) => {
-        const el = document.getElementById(id);
-        if (el) el.value = val || '';
+// --- CMS Logic (admin.html) ---
+function initAdmin() {
+    const pwdInput = document.getElementById('admin-password');
+    window.verifyAuth = () => {
+        if (pwdInput.value === 'Ramsar@305402') {
+            document.getElementById('admin-auth').classList.add('hidden');
+            document.getElementById('admin-dashboard').classList.remove('hidden');
+            populateCMS();
+        } else { alert("Access Denied."); }
     };
 
+    // File Handlers
+    const setupUpload = (id, statePath, previewId) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (storage) {
+                const ref = storage.ref().child(`${statePath}/${Date.now()}_${file.name}`);
+                await ref.put(file);
+                const url = await ref.getDownloadURL();
+                // Deep set
+                const keys = statePath.split('.');
+                let current = state;
+                for (let i = 0; i < keys.length - 1; i++) current = current[keys[i]];
+                current[keys[keys.length - 1]] = url;
+                if (previewId) document.getElementById(previewId).src = url;
+                alert("Cloud Sync Successful!");
+            } else {
+                const reader = new FileReader();
+                reader.onload = (re) => {
+                    const keys = statePath.split('.');
+                    let current = state;
+                    for (let i = 0; i < keys[i]; i++) current = current[keys[i]];
+                    current[keys[keys.length - 1]] = re.target.result;
+                    if (previewId) document.getElementById(previewId).src = re.target.result;
+                };
+                reader.readAsDataURL(file);
+                alert("Asset Loaded (Local Mode).");
+            }
+        };
+    };
+
+    setupUpload('photo-upload', 'profile.photo', 'admin-profile-preview');
+    setupUpload('resume-upload', 'profile.resumeUrl', null);
+}
+
+function populateCMS() {
+    // Basic Info
+    const setVal = (id, val) => { if (document.getElementById(id)) document.getElementById(id).value = val || ''; };
     setVal('edit-name', state.profile.name);
     setVal('edit-title', state.profile.title);
     setVal('edit-bio', state.profile.bio);
     setVal('edit-location', state.profile.location);
-    setVal('edit-edu', state.profile.education);
-    setVal('edit-lang', state.profile.languages);
+    setVal('edit-edu-short', state.profile.education);
     setVal('edit-email', state.contact.email);
     setVal('edit-phone', state.contact.phone);
+    setVal('edit-logo-text', state.profile.logoText);
 
-    setVal('edit-experience', JSON.stringify(state.experience, null, 2));
-    setVal('edit-competencies', JSON.stringify(state.competencies, null, 2));
-    setVal('edit-software', JSON.stringify(state.software, null, 2));
-    
-    const preview = document.getElementById('admin-profile-preview');
-    if (preview) preview.src = state.profile.photo;
-
-    // File Upload Handler
-    const fileIn = document.getElementById('photo-upload');
-    if (fileIn) {
-        fileIn.onchange = async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            if (storage) {
-                try {
-                    const ref = storage.ref().child(`profile/${Date.now()}_${file.name}`);
-                    await ref.put(file);
-                    state.profile.photo = await ref.getDownloadURL();
-                    document.getElementById('admin-profile-preview').src = state.profile.photo;
-                    alert("Photo Uploaded to Cloud!");
-                } catch (e) { alert("Upload Failed: Connect Firebase Storage."); }
-            } else {
-                // Local Preview Fallback
-                const reader = new FileReader();
-                reader.onload = (re) => {
-                    state.profile.photo = re.target.result;
-                    document.getElementById('admin-profile-preview').src = re.target.result;
-                };
-                reader.readAsDataURL(file);
-                alert("Preview generated. Save to persist locally.");
-            }
-        };
+    // Visibility Toggles
+    const toggleContainer = document.getElementById('section-toggles');
+    if (toggleContainer) {
+        toggleContainer.innerHTML = Object.keys(state.sections).map(sectionId => `
+            <div class="flex items-center justify-between p-3 glass-card rounded-xl">
+                <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">${sectionId}</span>
+                <input type="checkbox" ${state.sections[sectionId].visible ? 'checked' : ''} 
+                       onchange="state.sections['${sectionId}'].visible = this.checked" 
+                       class="w-4 h-4 accent-cyan-500">
+            </div>
+        `).join('');
     }
+
+    // Dynamic Lists
+    renderListEditor('experience-editor-list', state.experience, ['year', 'role', 'company', 'desc']);
+    renderListEditor('competencies-editor-list', state.competencies, ['icon', 'category', 'items']);
+    renderListEditor('certificates-editor-list', state.certificates, ['title', 'issuer', 'image']);
+
+    if (window.lucide) lucide.createIcons();
 }
+
+function renderListEditor(containerId, list, fields) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = list.map((item, index) => `
+        <div class="section-item p-4 bg-white/5 rounded-xl space-y-3 relative group">
+            <button onclick="removeItem('${containerId}', ${index})" class="absolute top-2 right-2 text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                <i data-lucide="trash-2" class="h-4 w-4"></i>
+            </button>
+            <div class="grid gap-3">
+                ${fields.map(f => `
+                    <div class="space-y-1">
+                        <label class="text-[8px] uppercase tracking-widest text-gray-500">${f}</label>
+                        <input type="text" value="${item[f] || ''}" onchange="updateItem('${containerId}', ${index}, '${f}', this.value)" class="admin-input py-1 text-xs">
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `).join('');
+    lucide.createIcons();
+}
+
+window.addItem = (category) => {
+    const listMap = {
+        'experience-editor-list': { year: '2024', role: 'New Role', company: 'Company', desc: 'Description' },
+        'competencies-editor-list': { icon: 'activity', category: 'New Category', items: 'Skill 1, Skill 2' },
+        'certificates-editor-list': { title: 'New Certificate', issuer: 'Issuer', image: './portrait.jpg' }
+    };
+    const targetState = {
+        'experience-editor-list': state.experience,
+        'competencies-editor-list': state.competencies,
+        'certificates-editor-list': state.certificates
+    };
+    targetState[category].push(listMap[category]);
+    populateCMS();
+};
+
+window.removeItem = (category, index) => {
+    const targetState = {
+        'experience-editor-list': 'experience',
+        'competencies-editor-list': 'competencies',
+        'certificates-editor-list': 'certificates'
+    };
+    state[targetState[category]].splice(index, 1);
+    populateCMS();
+};
+
+window.updateItem = (category, index, field, value) => {
+    const targetState = {
+        'experience-editor-list': 'experience',
+        'competencies-editor-list': 'competencies',
+        'certificates-editor-list': 'certificates'
+    };
+    state[targetState[category]][index][field] = value;
+};
+
+window.addExperienceItem = () => addItem('experience-editor-list');
+window.addCompetencyItem = () => addItem('competencies-editor-list');
+window.addCertificateItem = () => addItem('certificates-editor-list');
 
 window.saveChanges = async () => {
     try {
@@ -242,28 +338,16 @@ window.saveChanges = async () => {
         state.profile.title = document.getElementById('edit-title').value;
         state.profile.bio = document.getElementById('edit-bio').value;
         state.profile.location = document.getElementById('edit-location').value;
-        state.profile.education = document.getElementById('edit-edu').value;
-        state.profile.languages = document.getElementById('edit-lang').value;
+        state.profile.education = document.getElementById('edit-edu-short').value;
+        state.profile.logoText = document.getElementById('edit-logo-text').value;
         state.contact.email = document.getElementById('edit-email').value;
         state.contact.phone = document.getElementById('edit-phone').value;
 
-        state.experience = JSON.parse(document.getElementById('edit-experience').value);
-        state.competencies = JSON.parse(document.getElementById('edit-competencies').value);
-        state.software = JSON.parse(document.getElementById('edit-software').value);
-
         localStorage.setItem(VERSION, JSON.stringify(state));
-
-        if (db) {
-            await db.collection('portfolio').doc('main').set(state);
-            alert("Success: Synced with Cloud & LocalStorage.");
-        } else {
-            alert("Saved: Using LocalStorage (Cloud offline).");
-        }
-    } catch (e) {
-        alert("Format Error: Ensure JSON sections are valid.");
-        console.error(e);
-    }
+        if (db) await db.collection('portfolio').doc('main').set(state);
+        alert("Portfolio Live & Synchronized!");
+    } catch (e) { alert("Save Error"); console.error(e); }
 };
 
-// Safety Timeout
-setTimeout(() => { if (!window.location.pathname.includes('admin.html')) hideLoader(); }, 5000);
+// Safety
+setTimeout(() => { if (!window.location.pathname.includes('admin.html')) renderMain(); }, 5000);
