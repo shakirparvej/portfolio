@@ -9,7 +9,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Scripts -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -22,223 +22,166 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
     
-    
-
-    
-
     <style>
+        :root {
+            --accent: #06b6d4;
+            --accent-glow: rgba(6, 182, 212, 0.3);
+        }
+        
         body {
-            background-color: #0a0a0a;
+            background-color: #050505;
             color: #ffffff;
+            font-family: 'Space Grotesk', sans-serif;
             overflow-x: hidden;
         }
 
         .grid-background {
-            background-image: linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
+            background-image: linear-gradient(rgba(6, 182, 212, 0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(6, 182, 212, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
         }
 
         .glass-card {
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.02);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(6, 182, 212, 0.3);
+            background: rgba(255, 255, 255, 0.04);
+            transform: translateY(-5px);
         }
 
         .gradient-text {
-            background: linear-gradient(to right, #06b6d4, #8b5cf6);
+            background: linear-gradient(to right, #06b6d4, #a855f7);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-
         .gradient-bg {
             background: linear-gradient(135deg, #06b6d4, #8b5cf6);
         }
 
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #0a0a0a;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-        }
-
         /* Timeline Styles */
-        .timeline-item::after {
-            content: '';
-            position: absolute;
-            left: 50%;
-            top: 0;
-            width: 2px;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.1);
-            z-index: -1;
-        }
-
-        /* Magnetic Button Effect */
-        .magnetic {
-            display: inline-block;
-            transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-        }
-
         #experience-list::before {
             content: '';
             position: absolute;
-            left: 29px;
-            top: 10px;
-            bottom: 40px;
-            width: 2px;
-            background: linear-gradient(to bottom, transparent, rgba(6, 182, 212, 0.3) 15%, rgba(6, 182, 212, 0.3) 85%, transparent);
-            z-index: 10;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: linear-gradient(to bottom, transparent, rgba(6, 182, 212, 0.5), transparent);
         }
 
-        .timeline-item {
-            position: relative;
-        }
-
-        #toast-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-        }
-
-        @media print {
-            nav, .magnetic, button, form, footer, #toast-container, .grid-background, .absolute { display: none !important; }
-            body { background: white !important; color: black !important; }
-            .glass-card { border: none !important; backdrop-filter: none !important; background: transparent !important; color: black !important; box-shadow: none !important; }
-            .gradient-text { background: none !important; -webkit-text-fill-color: black !important; color: black !important; }
-            h1, h2, h3, h4 { color: black !important; }
-            section { padding: 0 !important; margin: 0 !important; page-break-inside: avoid; }
-            #hero { min-height: auto !important; height: auto !important; display: block !important; }
-            #profile-img { width: 150px !important; height: 150px !important; border-radius: 5px !important; float: left; margin-right: 20px; }
-            #experience { display: block !important; }
-        }
-
-        /* Loader Styles */
         #loader {
             position: fixed;
             inset: 0;
-            z-index: 999;
-            background: #0a0a0a;
+            z-index: 9999;
+            background: #050505;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: opacity 0.8s ease;
         }
 
-        .loader-pulse {
-            width: 80px;
-            height: 80px;
+        .loader-ring {
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
-            border: 2px solid rgba(6, 182, 212, 0.2);
+            border: 2px solid rgba(6, 182, 212, 0.1);
             border-top-color: #06b6d4;
             animation: spin 1s linear infinite;
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        .mobile-only { display: none; }
+        @media (max-width: 768px) {
+            .mobile-only { display: block; }
+            .desktop-only { display: none; }
+        }
     </style>
 </head>
-<body class="custom-scrollbar selection:bg-cyan-500/30 selection:text-cyan-400">
+<body class="selection:bg-cyan-500/30 selection:text-cyan-400">
 
-    <!-- Loader Overlay -->
     <div id="loader">
-        <div class="loader-pulse mb-6"></div>
-        <div class="text-cyan-400 font-display font-bold text-xl tracking-tighter animate-pulse">DR. SHAKIR PARVEJ</div>
-        <p class="text-gray-500 text-xs mt-2 uppercase tracking-[0.3em]">Healthcare AI Portfolio</p>
+        <div class="loader-ring mb-6"></div>
+        <div class="text-cyan-400 font-bold text-lg tracking-widest animate-pulse">LOADING PROFILE</div>
     </div>
 
-    <!-- Grid Background Overlay -->
     <div class="fixed inset-0 grid-background pointer-events-none z-0"></div>
 
-    <!-- Navigation -->
-    <nav class="fixed top-0 left-0 right-0 z-50 flex justify-center py-6 px-4">
-        <div class="glass-card rounded-full px-8 py-3 flex items-center space-x-8 max-w-5xl w-full justify-between">
-            <a href="#" class="font-display font-bold text-xl tracking-tighter" id="logo">SP<span class="text-cyan-400">.</span></a>
+    <nav class="fixed top-0 left-0 right-0 z-50 flex justify-center py-4 px-4">
+        <div class="glass-card rounded-2xl px-6 py-3 flex items-center justify-between max-w-5xl w-full">
+            <a href="#" class="font-bold text-xl tracking-tighter" id="logo">SP<span class="text-cyan-400">.</span></a>
             
-            <div class="hidden md:flex space-x-8 text-sm font-medium text-gray-400">
-                <a href="#hero" class="hover:text-white transition-colors">Home</a>
-                <a href="#about" class="hover:text-white transition-colors">Summary</a>
-                <a href="#experience" class="hover:text-white transition-colors">Experience</a>
-                <a href="#competencies" class="hover:text-white transition-colors">Competencies</a>
-                <a href="#contact" class="hover:text-white transition-colors">Contact</a>
+            <div class="hidden md:flex space-x-6 text-xs uppercase tracking-widest font-semibold text-gray-400">
+                <a href="#hero" class="hover:text-cyan-400 transition-colors">Home</a>
+                <a href="#about" class="hover:text-cyan-400 transition-colors">About</a>
+                <a href="#experience" class="hover:text-cyan-400 transition-colors">Path</a>
+                <a href="#contact" class="hover:text-cyan-400 transition-colors">Contact</a>
             </div>
 
             <div class="flex items-center space-x-3">
-                <a href="https://wa.me/917727930382" target="_blank" class="flex items-center justify-center text-gray-400 hover:text-cyan-400 transition-colors w-10 h-10 glass-card rounded-xl group"><i data-lucide="message-circle" class="h-5 w-5 group-hover:scale-110 transition-transform"></i></a>
-                <a href="https://linkedin.com" id="nav-linkedin" class="flex items-center justify-center text-gray-400 hover:text-cyan-400 transition-colors w-10 h-10 glass-card rounded-xl group" target="_blank"><i data-lucide="linkedin" class="h-5 w-5 group-hover:scale-110 transition-transform"></i></a>
+                <a href="https://wa.me/917727930382" target="_blank" class="w-10 h-10 flex items-center justify-center glass-card rounded-xl text-cyan-400"><i data-lucide="message-circle" class="h-4 w-4"></i></a>
+                <a href="/admin.html" class="hidden md:flex w-10 h-10 items-center justify-center glass-card rounded-xl text-gray-500 hover:text-white"><i data-lucide="settings" class="h-4 w-4"></i></a>
             </div>
         </div>
     </nav>
 
     <main class="relative z-10">
         <!-- Hero Section -->
-        <section id="hero" class="min-h-screen flex flex-col justify-center container mx-auto px-6 pt-20">
-            <div class="grid md:grid-cols-2 gap-12 items-center">
-                <div class="space-y-8 animate-fade-in-up">
-                    <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full border border-cyan-500/20 bg-cyan-500/5 text-cyan-400 text-xs font-semibold uppercase tracking-widest">
+        <section id="hero" class="min-h-screen flex items-center container mx-auto px-6 py-12 md:py-24">
+            <div class="grid lg:grid-cols-2 gap-12 items-center w-full">
+                <div class="space-y-8 order-2 lg:order-1 text-center lg:text-left">
+                    <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full border border-cyan-500/20 bg-cyan-500/5 text-cyan-400 text-[10px] font-bold uppercase tracking-[0.3em] mx-auto lg:mx-0">
                         <span class="relative flex h-2 w-2">
                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
                             <span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
                         </span>
-                        <span>Clinical Expert & Tech Architect</span>
+                        <span>Med-Tech Innovator</span>
                     </div>
                     
-                    <h1 class="font-display text-5xl lg:text-7xl font-bold tracking-tight leading-none" id="hero-name">
-                        DR. SHAKIR <br> <span class="gradient-text">PARVEJ.</span>
+                    <h1 class="text-5xl md:text-6xl lg:text-8xl font-bold tracking-tighter leading-[0.9]" id="hero-name">
+                        SHAKIR <br> <span class="gradient-text">PARVEJ.</span>
                     </h1>
                     
-                    <p class="text-gray-400 text-xl max-w-lg leading-relaxed font-light" id="hero-title-desc">
-                        ICU & EMERGENCY PHYSICIAN | HEALTHCARE AI ENTHUSIAST
+                    <p class="text-gray-400 text-lg md:text-xl max-w-xl mx-auto lg:mx-0 leading-relaxed font-light" id="hero-title-desc">
+                        ICU Physician merging Clinical Excellence with Artificial Intelligence.
                     </p>
 
-                    <div class="flex items-center space-x-4 text-sm text-gray-500">
-                        <div class="flex items-center space-x-2">
-                            <i data-lucide="map-pin" class="h-4 w-4"></i>
-                            <span id="hero-location">Noida Sector 62 | Ramsar</span>
-                        </div>
-                        <div class="w-px h-4 bg-white/10"></div>
-                        <div class="flex items-center space-x-2">
-                            <i data-lucide="briefcase" class="h-4 w-4"></i>
-                            <span>MBBS, GMC Kota</span>
-                        </div>
+                    <div class="flex flex-wrap justify-center lg:justify-start gap-4 pt-4">
+                        <a href="#contact" class="px-8 py-4 gradient-bg rounded-xl font-bold uppercase text-xs tracking-widest shadow-lg hover:brightness-110 transition-all">
+                            Contact Doctor
+                        </a>
+                        <a href="/admin.html" class="md:hidden px-8 py-4 glass-card rounded-xl font-bold uppercase text-xs tracking-widest">
+                            Admin Login
+                        </a>
                     </div>
 
-                    <div class="flex flex-wrap gap-4 pt-4">
-                        <a href="#contact" class="magnetic px-8 py-4 gradient-bg rounded-2xl font-semibold shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:scale-105 transition-all">
-                            Get in touch
-                        </a>
-                        <a href="javascript:void(0)" onclick="downloadResumePDF()" class="px-8 py-4 glass-card rounded-2xl font-semibold hover:bg-white/5 transition-all flex items-center space-x-2">
-                            <i data-lucide="download" class="h-4 w-4"></i><span>Download Resume</span>
-                        </a>
+                    <div class="flex items-center justify-center lg:justify-start space-x-6 pt-6 text-gray-500">
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="map-pin" class="h-4 w-4"></i>
+                            <span class="text-xs uppercase font-bold tracking-wider" id="hero-location">Rajasthan | NCR</span>
+                        </div>
+                        <div class="flex items-center space-x-2 border-l border-white/10 pl-6">
+                            <i data-lucide="award" class="h-4 w-4"></i>
+                            <span class="text-xs uppercase font-bold tracking-wider">MBBS · GMC Kota</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="relative flex justify-center items-center">
-                    <div class="absolute inset-0 bg-cyan-500/20 blur-[120px] rounded-full animate-float"></div>
-                    <div class="relative w-80 h-80 lg:w-96 lg:h-96 rounded-2xl overflow-hidden border border-white/10 group cursor-pointer shadow-2xl">
-                        <div class="absolute inset-0 bg-gradient-to-t from-dark via-transparent to-transparent opacity-60 z-10 group-hover:opacity-40 transition-opacity"></div>
-                        <img id="profile-img" src="" alt="Dr. Shakir Parvej" class="w-full h-full object-cover grayscale0 hover:grayscale-0 transition-all duration-700 h-full scale-110 group-hover:scale-100">
-                    </div>
-                    
-                    <!-- Floating Badge -->
-                    <div class="absolute -bottom-6 -right-6 glass-card p-6 rounded-2xl animate-float" style="animation-delay: -1.5s">
-                        <div class="flex items-center space-x-3">
-                            <div class="p-3 bg-cyan-500 rounded-xl">
-                                <i data-lucide="activity" class="text-white"></i>
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-400 font-medium">Domain Expert</p>
-                                <p class="text-sm font-bold">Medical AI Operations</p>
-                            </div>
+                <div class="order-1 lg:order-2 flex justify-center items-center">
+                    <div class="relative w-64 h-64 md:w-80 md:h-80 lg:w-[450px] lg:h-[450px]">
+                        <div class="absolute inset-0 bg-cyan-500/10 blur-[100px] rounded-full animate-pulse"></div>
+                        <div class="relative w-full h-full rounded-3xl overflow-hidden border border-white/10 glass-card">
+                            <img id="profile-img" src="./portrait.jpg" alt="Dr. Shakir Parvej" class="w-full h-full object-cover">
                         </div>
                     </div>
                 </div>
@@ -246,215 +189,117 @@
         </section>
 
         <!-- About Section -->
-        <section id="about" class="py-20 container mx-auto px-6">
-            <div class="grid md:grid-cols-2 gap-20">
-                <div class="space-y-8">
-                    <h2 class="font-display text-4xl md:text-5xl font-bold leading-tight">
-                        Bridging Medicine <br> <span class="gradient-text">& Artificial Intelligence.</span>
+        <section id="about" class="py-12 md:py-24 container mx-auto px-6">
+            <div class="max-w-4xl mx-auto space-y-12">
+                <div class="grid md:grid-cols-2 gap-12">
+                    <h2 class="text-4xl md:text-5xl font-bold leading-none tracking-tighter">
+                        Clinical Skill <br> meets <span class="gradient-text">Software Edge.</span>
                     </h2>
-                    <p class="text-gray-400 text-lg leading-relaxed font-light" id="about-bio">
-                        Forward-thinking medical professional with hands-on clinical experience in intensive care and emergency medicine. Deeply passionate about integrating pathology, clinical care, and AI. Proficient in Python and Rust, dedicated to building the future of tech-driven healthcare.
+                    <p class="text-gray-400 text-lg md:text-xl font-light leading-relaxed" id="about-bio">
+                        Physician specializing in intensive care with a technical foundation in Python & Rust. Focused on building production-ready AI solutions for complex medical diagnostics.
                     </p>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="glass-card p-6 rounded-2xl space-y-2 relative overflow-hidden group">
-                            <div class="absolute -right-4 -top-4 w-16 h-16 bg-cyan-500/10 rounded-full blur-xl group-hover:scale-150 transition-transform"></div>
-                            <i data-lucide="graduation-cap" class="text-cyan-400 h-6 w-6"></i>
-                            <h4 class="font-bold">Education</h4>
-                            <p class="text-sm text-gray-500" id="about-edu">MBBS, GMC Kota, 2023</p>
-                        </div>
-                        <div class="glass-card p-6 rounded-2xl space-y-2 relative overflow-hidden group">
-                            <div class="absolute -right-4 -top-4 w-16 h-16 bg-purple-500/10 rounded-full blur-xl group-hover:scale-150 transition-transform"></div>
-                            <i data-lucide="languages" class="text-cyan-400 h-6 w-6"></i>
-                            <h4 class="font-bold">Languages</h4>
-                            <p class="text-sm text-gray-500" id="about-lang">English, Hindi, Urdu, Arabic</p>
-                        </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="glass-card p-8 rounded-2xl">
+                        <i data-lucide="stethoscope" class="text-cyan-400 h-8 w-8 mb-4"></i>
+                        <h4 class="font-bold mb-2">Education</h4>
+                        <p class="text-sm text-gray-500" id="about-edu">MBBS, GMC Kota</p>
                     </div>
+                    <div class="glass-card p-8 rounded-2xl">
+                        <i data-lucide="globe" class="text-purple-400 h-8 w-8 mb-4"></i>
+                        <h4 class="font-bold mb-2">Languages</h4>
+                        <p class="text-sm text-gray-500" id="about-lang">English, Hindi, Arabic</p>
+                    </div>
+                    <div class="glass-card p-8 rounded-2xl">
+                        <i data-lucide="code" class="text-cyan-400 h-8 w-8 mb-4"></i>
+                        <h4 class="font-bold mb-2">Tech Stack</h4>
+                        <p class="text-sm text-gray-500">Python, Rust, DS</p>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-                    <div class="glass-card p-6 rounded-2xl space-y-2">
-                        <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500">Interests</h4>
-                        <div class="flex flex-wrap gap-2" id="interests-grid">
-                            <!-- Injected by JS -->
-                        </div>
+        <!-- Experience -->
+        <section id="experience" class="py-12 md:py-24 container mx-auto px-6">
+            <div class="grid lg:grid-cols-2 gap-20">
+                <div class="space-y-12">
+                    <div class="space-y-4">
+                        <span class="text-cyan-400 text-xs font-bold uppercase tracking-[0.3em]">The Path</span>
+                        <h3 class="text-4xl font-bold tracking-tighter">Professional Journey.</h3>
+                    </div>
+                    <div id="experience-list" class="space-y-12 relative pl-8">
+                        <!-- Injected by JS -->
                     </div>
                 </div>
                 
-                <!-- Experience Timeline -->
-                <div id="experience" class="space-y-12">
-                    <h3 class="font-display text-2xl font-bold tracking-tight">Professional Path</h3>
-                    <div class="space-y-8 relative" id="experience-list">
-                        <!-- Items injected by JS -->
+                <div class="space-y-12">
+                    <div class="space-y-4 text-right">
+                        <span class="text-purple-400 text-xs font-bold uppercase tracking-[0.3em]">Mastery</span>
+                        <h3 class="text-4xl font-bold tracking-tighter">Core Competencies.</h3>
+                    </div>
+                    <div id="competencies-grid" class="grid sm:grid-cols-2 gap-4">
+                        <!-- Injected by JS -->
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Competencies Section -->
-        <section id="competencies" class="py-20 container mx-auto px-6">
-            <div class="text-center space-y-4 mb-16">
-                <h2 class="font-display text-4xl md:text-5xl font-bold">Core <span class="gradient-text">Competencies.</span></h2>
-                <p class="text-gray-500 max-w-lg mx-auto uppercase tracking-widest text-xs font-bold">clinical excellence & technical proficiency</p>
+        <!-- Software -->
+        <section id="software" class="py-12 md:py-24 container mx-auto px-6">
+            <div class="text-center mb-16 px-4">
+                <h2 class="text-3xl md:text-5xl font-bold tracking-tighter">Tools & <span class="gradient-text">Systems.</span></h2>
             </div>
-            
-            <div class="grid md:grid-cols-3 gap-6" id="competencies-grid">
-                <!-- Items injected by JS -->
-            </div>
-        </section>
-
-        <!-- Software Systems Grid -->
-        <section id="software" class="py-20 container mx-auto px-6">
-            <div class="text-center space-y-4 mb-16">
-                <h2 class="font-display text-3xl font-bold">Software & <span class="gradient-text">Systems Proficiency.</span></h2>
-            </div>
-            <div class="grid md:grid-cols-3 gap-8" id="software-grid">
+            <div id="software-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <!-- Injected by JS -->
             </div>
         </section>
 
         <!-- Contact Section -->
-        <section id="contact" class="py-20 container mx-auto px-6 mb-20">
-            <div class="glass-card rounded-[3rem] p-12 lg:p-20 overflow-hidden relative">
-                <div class="absolute -top-20 -right-20 w-80 h-80 bg-cyan-500/10 blur-[100px]"></div>
-                <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-purple-500/10 blur-[100px]"></div>
-                
-                <div class="grid lg:grid-cols-2 gap-16 relative z-10">
+        <section id="contact" class="py-12 md:py-24 container mx-auto px-6 mb-24">
+            <div class="glass-card rounded-[2rem] md:rounded-[3rem] p-8 md:p-20 relative overflow-hidden">
+                <div class="absolute inset-0 bg-cyan-500/5 backdrop-blur-3xl"></div>
+                <div class="grid lg:grid-cols-2 gap-12 relative z-10">
                     <div class="space-y-8">
-                        <h2 class="font-display text-5xl font-bold tracking-tight">Let's <br> <span class="gradient-text">Innovate.</span></h2>
-                        <p class="text-gray-400 text-lg">Always looking to collaborate on healthcare AI initiatives, medical research, or clinical technology integrations.</p>
-                        
-                        <div class="space-y-6 pt-4">
-                            <div class="flex items-center space-x-4 group cursor-pointer" onclick="window.location.href='mailto:acadmiana@gmail.com'">
-                                <div class="w-12 h-12 glass-card rounded-2xl flex items-center justify-center text-cyan-400 group-hover:bg-cyan-500/20 transition-all">
-                                    <i data-lucide="mail"></i>
-                                </div>
+                        <h2 class="text-5xl font-bold tracking-tighter italic"><span class="gradient-text">Innovate</span> <br> with me.</h2>
+                        <div class="space-y-6">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-12 h-12 glass-card rounded-xl flex items-center justify-center text-cyan-400"><i data-lucide="mail" class="h-5 w-5"></i></div>
                                 <div>
-                                    <p class="text-xs text-gray-500 uppercase font-bold">Direct Email</p>
-                                    <p class="text-lg font-medium" id="contact-email">acadmiana@gmail.com</p>
+                                    <p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Email</p>
+                                    <p class="font-medium" id="contact-email">acadmiana@gmail.com</p>
                                 </div>
                             </div>
                             <div class="flex items-center space-x-4">
-                                <div class="w-12 h-12 glass-card rounded-2xl flex items-center justify-center text-cyan-400">
-                                    <i data-lucide="phone"></i>
-                                </div>
+                                <div class="w-12 h-12 glass-card rounded-xl flex items-center justify-center text-cyan-400"><i data-lucide="phone" class="h-5 w-5"></i></div>
                                 <div>
-                                    <p class="text-xs text-gray-500 uppercase font-bold">Mobile</p>
-                                    <p class="text-lg font-medium" id="contact-phone">+91 77 2793 0382</p>
-                                </div>
-                            </div>
-                            
-                            <div class="flex items-center space-x-4 group">
-                                <div class="w-12 h-12 glass-card rounded-2xl flex items-center justify-center text-cyan-400 group-hover:bg-cyan-500/10 transition-all">
-                                    <i data-lucide="message-circle"></i>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-gray-500 uppercase font-bold">WhatsApp</p>
-                                    <a href="https://wa.me/917727930382" id="contact-whatsapp-link" target="_blank" class="text-lg font-medium text-white hover:text-cyan-400 transition-colors">+91 77 2793 0382</a>
+                                    <p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Mobile</p>
+                                    <p class="font-medium" id="contact-phone">+91 77 2793 0382</p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <form class="space-y-6" id="contact-form">
-                        <div class="grid md:grid-cols-2 gap-6">
-                            <input type="text" placeholder="Your Name" class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-cyan-500/50 transition-colors">
-                            <input type="email" placeholder="Your Email" class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-cyan-500/50 transition-colors">
-                        </div>
-                        <textarea placeholder="Message" rows="4" class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-cyan-500/50 transition-colors resize-none"></textarea>
-                        <button type="submit" class="w-full py-4 gradient-bg rounded-2xl font-bold text-lg hover:scale-[1.02] transition-all shadow-lg active:scale-100">Send Inquiry</button>
+                    <form class="space-y-4" id="contact-form">
+                        <input type="text" placeholder="Full Name" class="w-full bg-white/5 border border-white/5 rounded-xl px-6 py-4 focus:outline-none focus:border-cyan-500/30 transition-all">
+                        <input type="email" placeholder="Email Address" class="w-full bg-white/5 border border-white/5 rounded-xl px-6 py-4 focus:outline-none focus:border-cyan-500/30 transition-all">
+                        <textarea placeholder="Your Message" rows="4" class="w-full bg-white/5 border border-white/5 rounded-xl px-6 py-4 focus:outline-none focus:border-cyan-500/30 transition-all resize-none"></textarea>
+                        <button type="submit" class="w-full py-5 gradient-bg rounded-xl font-bold uppercase tracking-widest text-xs hover:brightness-110 transition-all">Send Inquiry</button>
                     </form>
                 </div>
             </div>
         </section>
-
-        <!-- Footer -->
-        <footer class="py-12 border-t border-white/5 bg-dark">
-            <div class="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
-                <div class="text-center md:text-left">
-                    <p class="font-display font-bold text-xl mb-2">SP<span class="text-cyan-400">.</span></p>
-                    <p class="text-gray-500 text-sm">© 2024 Dr. Shakir Parvej. All rights reserved.</p>
-                </div>
-                
-                <div class="flex space-x-8 text-sm text-gray-500 items-center">
-                    <a href="javascript:void(0)" onclick="openAdmin()" class="text-[8px] text-gray-800 hover:text-cyan-500/50 uppercase tracking-widest transition-colors" id="admin-trigger">Admin Dashboard</a>
-                </div>
-                
-                <div class="flex items-center space-x-4">
-                    <a href="https://wa.me/917727930382" target="_blank" class="flex items-center justify-center w-10 h-10 glass-card rounded-xl text-gray-400 hover:text-cyan-400 hover:border-cyan-400/30 transition-all"><i data-lucide="message-circle" class="h-4 w-4"></i></a>
-                    <a href="https://linkedin.com" target="_blank" class="flex items-center justify-center w-10 h-10 glass-card rounded-xl text-gray-400 hover:text-cyan-400 hover:border-cyan-400/30 transition-all"><i data-lucide="linkedin" class="h-4 w-4"></i></a>
-                </div>
-            </div>
-        </footer>
     </main>
 
-    <!-- Admin Modal -->
-    <div id="admin-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-dark/95 backdrop-blur-xl" onclick="closeAdmin()"></div>
-        <div class="relative glass-card w-full max-w-4xl max-h-[90vh] rounded-[2rem] overflow-hidden flex flex-col">
-            <!-- Auth Screen -->
-            <div id="admin-auth" class="flex-grow flex flex-col items-center justify-center space-y-8 p-12">
-                <div class="text-center font-display">
-                    <h2 class="text-3xl font-bold mb-2">Portfolio Dashboard</h2>
-                    <p class="text-gray-500">Manage credentials & professional data</p>
-                </div>
-                <input type="password" id="admin-password" placeholder="••••••••" class="bg-white/5 border border-white/10 rounded-2xl px-8 py-4 text-center text-2xl tracking-[1em] focus:outline-none focus:border-cyan-500/50 sm:w-64">
-                <button onclick="verifyAuth()" class="px-12 py-4 gradient-bg rounded-2xl font-bold shadow-lg hover:scale-105 active:scale-100 transition-all">Unlock Dashboard</button>
-            </div>
-
-            <!-- Content Editor -->
-            <div id="admin-editor" class="hidden flex-grow flex flex-col">
-                <div class="p-8 border-b border-white/10 flex justify-between items-center sticky top-0 bg-dark/50 backdrop-blur-md z-40">
-                    <h2 class="font-display text-2xl font-bold">Edit Resume Data</h2>
-                    <div class="flex space-x-4">
-                        <button onclick="saveChanges()" class="bg-green-500/20 text-green-400 border border-green-500/30 px-6 py-2 rounded-xl text-sm font-bold hover:bg-green-500/30 transition-all">Apply All Changes</button>
-                        <button onclick="closeAdmin()" class="bg-white/5 border border-white/10 px-6 py-2 rounded-xl text-sm font-bold hover:bg-white/10 transition-all">Cancel</button>
-                    </div>
-                </div>
-                
-                <div class="flex-grow overflow-y-auto p-8 space-y-12">
-                    <div class="grid md:grid-cols-2 gap-8">
-                        <div class="space-y-4">
-                            <label class="uppercase text-xs font-bold text-gray-500 tracking-widest">General Info</label>
-                            <input type="text" id="edit-name" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-cyan-500/30">
-                            <input type="text" id="edit-title" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-cyan-500/30">
-                            <textarea id="edit-bio" rows="6" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-cyan-500/30 resize-none"></textarea>
-                        </div>
-                        <div class="space-y-4">
-                            <label class="uppercase text-xs font-bold text-gray-500 tracking-widest">Metadata</label>
-                            <input type="text" id="edit-location" placeholder="Location" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                            <input type="text" id="edit-edu" placeholder="Education" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                            <input type="text" id="edit-lang" placeholder="Languages" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                            <input type="text" id="edit-email" placeholder="Email" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                            <input type="text" id="edit-phone" placeholder="Phone" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                        </div>
-                    </div>
-
-                    <div class="space-y-4">
-                        <label class="uppercase text-xs font-bold text-gray-500 tracking-widest">Experience (JSON)</label>
-                        <textarea id="edit-experience" class="w-full h-48 bg-white/5 border border-white/10 rounded-xl px-4 py-3 font-mono text-xs focus:border-cyan-500/30"></textarea>
-                    </div>
-
-                    <div class="space-y-4">
-                        <label class="uppercase text-xs font-bold text-gray-500 tracking-widest">Competencies (JSON)</label>
-                        <textarea id="edit-competencies" class="w-full h-48 bg-white/5 border border-white/10 rounded-xl px-4 py-3 font-mono text-xs focus:border-cyan-500/30"></textarea>
-                    </div>
-
-                    <div class="space-y-4">
-                        <label class="uppercase text-xs font-bold text-gray-500 tracking-widest">Software Systems (JSON)</label>
-                        <textarea id="edit-software" class="w-full h-48 bg-white/5 border border-white/10 rounded-xl px-4 py-3 font-mono text-xs focus:border-cyan-500/30"></textarea>
-                    </div>
-
-                    <div class="space-y-4">
-                        <label class="uppercase text-xs font-bold text-gray-500 tracking-widest">Interests (JSON Array)</label>
-                        <textarea id="edit-interests" class="w-full h-24 bg-white/5 border border-white/10 rounded-xl px-4 py-3 font-mono text-xs focus:border-cyan-500/30"></textarea>
-                    </div>
-                </div>
+    <footer class="py-12 border-t border-white/5">
+        <div class="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
+            <p class="text-gray-500 text-sm">© 2024 DR. SHAKIR PARVEJ. ALL RIGHTS RESERVED.</p>
+            <div class="flex space-x-4">
+                <a href="https://linkedin.com" target="_blank" class="w-10 h-10 glass-card rounded-xl flex items-center justify-center text-gray-500 hover:text-cyan-400"><i data-lucide="linkedin" class="h-4 w-4"></i></a>
+                <a href="https://wa.me/917727930382" target="_blank" class="w-10 h-10 glass-card rounded-xl flex items-center justify-center text-gray-500 hover:text-cyan-400"><i data-lucide="message-circle" class="h-4 w-4"></i></a>
             </div>
         </div>
-    </div>
+    </footer>
 
-    <!-- Toast Component -->
-    <div id="toast-container"></div>
-    
     <script src="app.js"></script>
 </body>
 </html>
