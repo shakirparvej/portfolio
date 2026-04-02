@@ -13,7 +13,7 @@ const firebaseConfig = {
     measurementId: "G-4YBPVXS2ZQ"
 };
 
-const VERSION = 'shakir_portfolio_v9_live';
+const VERSION = 'shakir_portfolio_v10_live';
 const DEFAULT_DATA = {
     profile: {
         name: "DR. SHAKIR PARVEJ",
@@ -24,19 +24,28 @@ const DEFAULT_DATA = {
         education: "MBBS, GMC Kota, India (2023)",
         languages: "English, Hindi, Urdu, Arabic",
         resumeUrl: "#",
-        logoText: "SP."
+        logoText: "SP.",
+        tagline: "Med-Tech Innovator",
+        availability: "Available for Consultation"
     },
     sections: {
         hero: { visible: true, order: 1 },
         about: { visible: true, order: 2 },
         experience: { visible: true, order: 3 },
-        competencies: { visible: true, order: 4 },
-        certificates: { visible: true, order: 5 },
-        software: { visible: true, order: 6 },
-        contact: { visible: true, order: 7 }
+        education: { visible: true, order: 4 },
+        competencies: { visible: true, order: 5 },
+        certificates: { visible: true, order: 6 },
+        software: { visible: true, order: 7 },
+        publications: { visible: true, order: 8 },
+        conferences: { visible: true, order: 9 },
+        skills: { visible: true, order: 10 },
+        contact: { visible: true, order: 11 }
     },
     experience: [
         { id: 1, year: "Nov 2025 - Present", role: "Lead Associate Medical Trainer", company: "Innodata Inc.", desc: "Leading medical AI training teams." }
+    ],
+    education: [
+        { id: 1, year: "2023", degree: "MBBS", institution: "Government Medical College, Kota", location: "Rajasthan, India", grade: "First Division" }
     ],
     competencies: [
         { id: 1, icon: "activity", category: "Clinical", items: "Intubation, Central Line, ICU Care" }
@@ -47,12 +56,27 @@ const DEFAULT_DATA = {
     certificates: [
         { id: 1, title: "Critical Care Basic", issuer: "ICMR", image: "" }
     ],
+    publications: [
+        { id: 1, title: "AI in Emergency Diagnostics", journal: "Journal of Medical Innovation", year: "2024", link: "#" }
+    ],
+    conferences: [
+        { id: 1, title: "International Healthcare AI Summit", role: "Speaker", location: "Delhi NCR", year: "2024" }
+    ],
+    skills: [
+        { id: 1, name: "Critical Care", level: 95 },
+        { id: 2, name: "Emergency Medicine", level: 90 },
+        { id: 3, name: "Medical AI", level: 85 },
+        { id: 4, name: "Python Programming", level: 75 },
+        { id: 5, name: "Research", level: 80 }
+    ],
     interests: ["Bird Watching", "AI Research"],
     contact: {
         email: "acadmiana@gmail.com",
         phone: "+91 77 2793 0382",
         whatsapp: "https://wa.me/917727930382",
-        linkedin: "https://linkedin.com/in/shakir-parvej"
+        linkedin: "https://linkedin.com/in/shakir-parvej",
+        twitter: "",
+        github: ""
     }
 };
 
@@ -263,6 +287,64 @@ function renderMain() {
         </div>
     `);
 
+    // Education Section
+    inject('education-list', state.education || [], edu => `
+        <div class="glass-card p-6 rounded-2xl relative overflow-hidden group hover:border-cyan-500/30 transition-all">
+            <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 rounded-bl-full"></div>
+            <div class="relative z-10">
+                <p class="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-2">${edu.year}</p>
+                <h4 class="text-lg font-bold mb-1">${edu.degree}</h4>
+                <p class="text-sm text-gray-300 mb-2">${edu.institution}</p>
+                <div class="flex items-center text-xs text-gray-500 space-x-2">
+                    <i data-lucide="map-pin" class="h-3 w-3"></i>
+                    <span>${edu.location}</span>
+                </div>
+                ${edu.grade ? `<p class="text-xs text-purple-400 mt-3 font-semibold">${edu.grade}</p>` : ''}
+            </div>
+        </div>
+    `);
+
+    // Publications Section
+    inject('publications-list', state.publications || [], pub => `
+        <div class="glass-card p-6 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 group hover:border-cyan-500/30 transition-all">
+            <div class="flex-1">
+                <h4 class="text-lg font-bold mb-1 group-hover:text-cyan-400 transition-colors">${pub.title}</h4>
+                <p class="text-sm text-gray-400 italic">${pub.journal}</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="text-xs font-bold text-cyan-400 uppercase tracking-widest">${pub.year}</span>
+                ${pub.link && pub.link !== '#' ? `<a href="${pub.link}" target="_blank" class="px-4 py-2 glass-card rounded-xl text-[8px] uppercase font-bold tracking-widest hover:bg-cyan-500/10 transition-all">Read More</a>` : ''}
+            </div>
+        </div>
+    `);
+
+    // Conferences Section
+    inject('conferences-list', state.conferences || [], conf => `
+        <div class="glass-card p-6 rounded-2xl group hover:border-purple-500/30 transition-all">
+            <div class="flex items-start justify-between mb-3">
+                <div>
+                    <h4 class="text-base font-bold mb-1">${conf.title}</h4>
+                    <p class="text-sm text-gray-400">${conf.location}</p>
+                </div>
+                <span class="text-xs font-bold text-purple-400 uppercase tracking-widest bg-purple-500/10 px-3 py-1 rounded-full">${conf.year}</span>
+            </div>
+            <p class="text-xs text-cyan-400 uppercase tracking-widest font-semibold">${conf.role}</p>
+        </div>
+    `);
+
+    // Skills Section with Progress Bars
+    inject('skills-list', state.skills || [], skill => `
+        <div class="space-y-2">
+            <div class="flex justify-between items-center">
+                <span class="text-sm font-medium">${skill.name}</span>
+                <span class="text-xs text-cyan-400 font-bold">${skill.level}%</span>
+            </div>
+            <div class="skill-bar">
+                <div class="skill-progress" style="width: 0%" data-width="${skill.level}%"></div>
+            </div>
+        </div>
+    `);
+
     const contact = state.contact || {};
     safeSet('contact-email', contact.email);
     safeSet('contact-phone', contact.phone);
@@ -273,85 +355,232 @@ function renderMain() {
     if (waLink) waLink.href = contact.whatsapp;
 
     if (window.lucide) lucide.createIcons();
+    
+    // Animate skill bars on load
+    setTimeout(() => {
+        document.querySelectorAll('.skill-progress').forEach(bar => {
+            bar.style.width = bar.getAttribute('data-width');
+        });
+    }, 500);
 }
 
-// --- Dynamic PDF Resume Engine ---
+// --- Dynamic PDF Resume Engine (Modern Elegant Design) ---
 window.generateResumePDF = async () => {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const primaryColor = [6, 182, 212];
+    const doc = new jsPDF({ format: 'a4', orientation: 'portrait' });
     
-    doc.setFillColor(5, 5, 5);
-    doc.rect(0, 0, 210, 45, 'F');
+    // Color scheme
+    const primaryColor = [6, 182, 212];   // Cyan
+    const secondaryColor = [139, 92, 246]; // Purple
+    const darkBg = [15, 15, 20];
+    const textGray = [120, 120, 130];
+    
+    // Header with gradient effect simulation
+    doc.setFillColor(...darkBg);
+    doc.rect(0, 0, 210, 55, 'F');
+    
+    // Accent line
+    doc.setDrawColor(...primaryColor);
+    doc.setLineWidth(3);
+    doc.line(0, 55, 210, 55);
+    
+    // Name - Large and bold
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(24);
+    doc.setFontSize(28);
     doc.setFont("helvetica", "bold");
-    doc.text(state.profile.name, 20, 22);
-    doc.setFontSize(9);
+    doc.text(state.profile.name, 20, 25);
+    
+    // Title
+    doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text(`${state.profile.title} | ${state.profile.location}`, 20, 30);
-    doc.text(`${state.contact.email} | ${state.contact.phone}`, 20, 36);
-
-    let y = 55;
-    const addSection = (title, items, renderFn) => {
+    doc.setTextColor(...primaryColor);
+    doc.text(state.profile.title, 20, 35);
+    
+    // Contact info row
+    doc.setTextColor(180, 180, 190);
+    doc.setFontSize(9);
+    const contactLine = `${state.contact.email}  |  ${state.contact.phone}  |  ${state.profile.location}`;
+    doc.text(contactLine, 20, 45);
+    
+    // Add profile photo if available
+    if (state.profile.photo && state.profile.photo.length > 100) {
+        try {
+            doc.addImage(state.profile.photo, 'JPEG', 170, 10, 30, 30);
+        } catch(e) { /* ignore image errors */ }
+    }
+    
+    let y = 70;
+    const leftMargin = 20;
+    const rightMargin = 190;
+    const contentWidth = 170;
+    
+    const addModernSection = (title, items, renderFn, icon) => {
         if (!items || items.length === 0) return;
-        doc.setTextColor(...primaryColor);
-        doc.setFontSize(14);
+        
+        // Section header with icon
+        doc.setFontSize(13);
         doc.setFont("helvetica", "bold");
-        doc.text(title.toUpperCase(), 20, y);
-        y += 2;
-        doc.setDrawColor(...primaryColor);
-        doc.line(20, y, 190, y);
-        y += 8;
-        doc.setTextColor(60, 60, 60);
+        doc.setTextColor(...primaryColor);
+        doc.text(title.toUpperCase(), leftMargin, y);
+        
+        // Underline
+        doc.setDrawColor(...textGray);
+        doc.setLineWidth(0.5);
+        doc.line(leftMargin, y + 1, rightMargin, y + 1);
+        
+        y += 10;
+        doc.setTextColor(50, 50, 55);
         doc.setFontSize(10);
         doc.setFont("helvetica", "normal");
-        items.forEach(item => { if (y > 270) { doc.addPage(); y = 20; } y = renderFn(item, y); });
-        y += 10;
+        
+        items.forEach(item => {
+            if (y > 275) { 
+                doc.addPage(); 
+                y = 25; 
+            }
+            y = renderFn(item, y, leftMargin, contentWidth);
+        });
+        y += 8;
     };
 
-    addSection("Experience", state.experience, (exp, currY) => {
+    // Experience Section
+    addModernSection("Professional Experience", state.experience, (exp, currY, margin, width) => {
+        // Role
         doc.setFont("helvetica", "bold");
-        doc.text(`${exp.role} @ ${exp.company}`, 20, currY);
+        doc.setTextColor(30, 30, 35);
+        doc.text(exp.role, margin, currY);
+        
+        // Year - right aligned
         doc.setFont("helvetica", "italic");
-        doc.text(exp.year, 190, currY, { align: 'right' });
+        doc.setTextColor(...secondaryColor);
+        doc.text(exp.year, margin + width, currY, { align: 'right' });
+        
         currY += 5;
+        
+        // Company
         doc.setFont("helvetica", "normal");
-        const lines = doc.splitTextToSize(exp.desc, 160);
-        doc.text(lines, 25, currY);
-        return currY + (lines.length * 5) + 4;
-    });
+        doc.setTextColor(100, 100, 110);
+        doc.text(exp.company, margin, currY);
+        
+        currY += 5;
+        
+        // Description
+        doc.setTextColor(60, 60, 65);
+        const lines = doc.splitTextToSize(exp.desc, width);
+        doc.text(lines, margin + 2, currY);
+        
+        return currY + (lines.length * 5) + 6;
+    }, 'briefcase');
 
-    addSection("Core Competencies", state.competencies, (comp, currY) => {
+    // Education Section
+    addModernSection("Education", state.education || [], (edu, currY, margin, width) => {
         doc.setFont("helvetica", "bold");
-        doc.text(`${comp.category}:`, 20, currY);
+        doc.setTextColor(30, 30, 35);
+        doc.text(`${edu.degree}`, margin, currY);
+        
         doc.setFont("helvetica", "normal");
-        doc.text(comp.items, 60, currY);
+        doc.setTextColor(100, 100, 110);
+        doc.text(edu.institution, margin, currY + 4);
+        
+        doc.setTextColor(...primaryColor);
+        doc.text(`${edu.year} | ${edu.grade || ''}`, margin + width, currY, { align: 'right' });
+        
+        return currY + 12;
+    }, 'graduation-cap');
+
+    // Core Competencies
+    addModernSection("Core Competencies", state.competencies, (comp, currY, margin, width) => {
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(30, 30, 35);
+        doc.text(`${comp.category}`, margin, currY);
+        
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(60, 60, 65);
+        const lines = doc.splitTextToSize(comp.items, width - 40);
+        doc.text(lines, margin, currY + 5);
+        
+        return currY + 5 + (lines.length * 5) + 3;
+    }, 'activity');
+
+    // Skills with Progress Bars
+    addModernSection("Skills Assessment", state.skills || [], (skill, currY, margin, width) => {
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(50, 50, 55);
+        doc.text(skill.name, margin, currY);
+        
+        // Progress bar background
+        doc.setFillColor(230, 230, 235);
+        doc.roundedRect(margin + 80, currY - 3, 80, 4, 1, 1, 'F');
+        
+        // Progress bar fill
+        doc.setFillColor(...primaryColor);
+        const barWidth = (skill.level / 100) * 80;
+        doc.roundedRect(margin + 80, currY - 3, barWidth, 4, 1, 1, 'F');
+        
+        // Percentage
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(...secondaryColor);
+        doc.text(`${skill.level}%`, margin + width, currY, { align: 'right' });
+        
+        return currY + 8;
+    }, 'trending-up');
+
+    // Publications
+    addModernSection("Publications", state.publications || [], (pub, currY, margin, width) => {
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(30, 30, 35);
+        doc.text(pub.title, margin, currY);
+        
+        doc.setFont("helvetica", "italic");
+        doc.setTextColor(100, 100, 110);
+        doc.text(pub.journal, margin, currY + 4);
+        
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(...primaryColor);
+        doc.text(pub.year, margin + width, currY, { align: 'right' });
+        
+        return currY + 10;
+    }, 'book-open');
+
+    // Conferences
+    addModernSection("Conference Participation", state.conferences || [], (conf, currY, margin, width) => {
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(30, 30, 35);
+        doc.text(conf.title, margin, currY);
+        
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(100, 100, 110);
+        doc.text(`${conf.location} - ${conf.role}`, margin, currY + 4);
+        
+        doc.setTextColor(...secondaryColor);
+        doc.text(conf.year, margin + width, currY, { align: 'right' });
+        
+        return currY + 10;
+    }, 'mic');
+
+    // Software & Tools
+    addModernSection("Technical Proficiency", state.software || [], (soft, currY, margin, width) => {
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(...secondaryColor);
+        doc.text(`${soft.level}:`, margin, currY);
+        
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(60, 60, 65);
+        doc.text(soft.tools, margin + 25, currY);
+        
         return currY + 6;
-    });
+    }, 'code');
 
-    addSection("Software & AI Mastery", state.software || [], (soft, currY) => {
-        doc.setFont("helvetica", "bold");
-        doc.text(`${soft.level}:`, 20, currY);
-        doc.setFont("helvetica", "normal");
-        doc.text(soft.tools, 60, currY);
-        return currY + 6;
-    });
-
-    addSection("Education & Details", [state.profile], (prof, currY) => {
-        doc.setFont("helvetica", "bold");
-        doc.text("Education:", 20, currY);
-        doc.setFont("helvetica", "normal");
-        doc.text(prof.education, 60, currY);
-        currY += 6;
-        doc.setFont("helvetica", "bold");
-        doc.text("Languages:", 20, currY);
-        doc.setFont("helvetica", "normal");
-        doc.text(state.profile.languages || "English, Hindi", 60, currY);
-        return currY + 6;
-    });
-
-    doc.save(`Resume_${state.profile.name.replace(/ /g, '_')}.pdf`);
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for(let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 160);
+        doc.text(`Page ${i} of ${pageCount}`, 105, 290, { align: 'center' });
+    }
+    
+    doc.save(`Resume_${state.profile.name.replace(/ /g, '_')}_Professional.pdf`);
 };
 
 const ICON_OPTIONS = ['activity', 'clipboard-list', 'stethoscope', 'brain', 'code', 'microscope', 'users', 'heart', 'drip', 'award', 'database', 'zap'];
@@ -405,9 +634,11 @@ function populateCMS() {
     setVal('edit-bio', state.profile.bio);
     setVal('edit-location', state.profile.location);
     setVal('edit-edu-short', state.profile.education);
+    setVal('edit-tagline', state.profile.tagline);
     setVal('edit-email', state.contact.email);
     setVal('edit-phone', state.contact.phone);
     setVal('edit-linkedin', state.contact.linkedin);
+    setVal('edit-twitter', state.contact.twitter || '');
     setVal('edit-logo-text', state.profile.logoText);
 
     const adminPreview = document.getElementById('admin-profile-preview');
@@ -426,8 +657,12 @@ function populateCMS() {
     }
 
     renderListEditor('experience-editor-list', state.experience, ['year', 'role', 'company', 'desc'], 'experience');
+    renderListEditor('education-editor-list', state.education || [], ['year', 'degree', 'institution', 'location', 'grade'], 'education');
     renderListEditor('competencies-editor-list', state.competencies, ['icon', 'category', 'items'], 'competencies');
     renderListEditor('software-editor-list', state.software || [], ['level', 'tools'], 'software');
+    renderListEditor('skills-editor-list', state.skills || [], ['name', 'level'], 'skills');
+    renderListEditor('publications-editor-list', state.publications || [], ['title', 'journal', 'year', 'link'], 'publications');
+    renderListEditor('conferences-editor-list', state.conferences || [], ['title', 'role', 'location', 'year'], 'conferences');
     renderCertificatesEditor();
 
     if (window.lucide) lucide.createIcons();
@@ -525,9 +760,13 @@ window.moveItem = (category, index, direction) => {
 window.addItem = (category) => {
     const listMap = {
         'experience': { year: '2024', role: 'New Role', company: 'Company', desc: 'Description' },
+        'education': { year: '2024', degree: 'Degree Name', institution: 'Institution Name', location: 'City, Country', grade: 'First Division' },
         'competencies': { icon: 'activity', category: 'New Category', items: 'Skill 1, Skill 2' },
         'certificates': { title: 'New Certificate', issuer: 'Issuer', image: '' },
-        'software': { level: 'Advanced', tools: 'New Tool' }
+        'software': { level: 'Advanced', tools: 'New Tool' },
+        'skills': { name: 'New Skill', level: 75 },
+        'publications': { title: 'Publication Title', journal: 'Journal Name', year: '2024', link: '#' },
+        'conferences': { title: 'Conference Name', role: 'Speaker', location: 'City', year: '2024' }
     };
     state[category].push(listMap[category]);
     populateCMS();
@@ -565,9 +804,11 @@ window.saveChanges = async () => {
         state.profile.location = document.getElementById('edit-location').value;
         state.profile.education = document.getElementById('edit-edu-short').value;
         state.profile.logoText = document.getElementById('edit-logo-text').value;
+        state.profile.tagline = document.getElementById('edit-tagline')?.value || state.profile.tagline;
         state.contact.email = document.getElementById('edit-email').value;
         state.contact.phone = document.getElementById('edit-phone').value;
         state.contact.linkedin = document.getElementById('edit-linkedin').value;
+        state.contact.twitter = document.getElementById('edit-twitter')?.value || '';
 
         localStorage.setItem(VERSION, JSON.stringify(state));
         if (db) await db.collection('portfolio').doc('main').set(state);
