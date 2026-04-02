@@ -82,16 +82,26 @@
                         <h3 class="text-xs font-bold text-cyan-400 uppercase tracking-widest">Global Profile</h3>
                         <i data-lucide="user" class="h-4 w-4 text-gray-600"></i>
                     </div>
-                    <div class="grid md:grid-cols-2 gap-4">
+                    <div class="grid md:grid-cols-3 gap-4">
                         <input type="text" id="edit-name" placeholder="Full name" class="admin-input">
                         <input type="text" id="edit-title" placeholder="Medical Title" class="admin-input">
                         <input type="text" id="edit-location" placeholder="Location" class="admin-input">
                         <input type="text" id="edit-edu-short" placeholder="Education Short" class="admin-input">
+                        <input type="text" id="edit-tagline" placeholder="Tagline" class="admin-input">
                         <input type="text" id="edit-email" placeholder="Email" class="admin-input">
                         <input type="text" id="edit-phone" placeholder="Phone" class="admin-input">
                         <input type="text" id="edit-linkedin" placeholder="LinkedIn URL" class="admin-input">
+                        <input type="text" id="edit-twitter" placeholder="Twitter URL" class="admin-input">
                     </div>
                     <textarea id="edit-bio" rows="4" placeholder="Professional Bio" class="admin-input"></textarea>
+                </div>
+
+                <div class="glass-card p-8 rounded-3xl space-y-6">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xs font-bold text-cyan-400 uppercase tracking-widest">Education History</h3>
+                        <button onclick="addItem('education')" class="text-[8px] text-cyan-400 hover:underline">NEW</button>
+                    </div>
+                    <div id="education-editor-list" class="space-y-4"></div>
                 </div>
 
                 <div class="glass-card p-8 rounded-3xl space-y-6">
@@ -108,6 +118,30 @@
                         <button onclick="addItem('competencies')" class="text-[8px] text-cyan-400 hover:underline">NEW</button>
                     </div>
                     <div id="competencies-editor-list" class="space-y-4"></div>
+                </div>
+
+                <div class="glass-card p-8 rounded-3xl space-y-6">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xs font-bold text-cyan-400 uppercase tracking-widest">Skills (with Progress)</h3>
+                        <button onclick="addItem('skills')" class="text-[8px] text-cyan-400 hover:underline">NEW</button>
+                    </div>
+                    <div id="skills-editor-list" class="space-y-4"></div>
+                </div>
+
+                <div class="glass-card p-8 rounded-3xl space-y-6">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xs font-bold text-cyan-400 uppercase tracking-widest">Publications</h3>
+                        <button onclick="addItem('publications')" class="text-[8px] text-cyan-400 hover:underline">NEW</button>
+                    </div>
+                    <div id="publications-editor-list" class="space-y-4"></div>
+                </div>
+
+                <div class="glass-card p-8 rounded-3xl space-y-6">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xs font-bold text-cyan-400 uppercase tracking-widest">Conferences</h3>
+                        <button onclick="addItem('conferences')" class="text-[8px] text-cyan-400 hover:underline">NEW</button>
+                    </div>
+                    <div id="conferences-editor-list" class="space-y-4"></div>
                 </div>
 
                 <div class="glass-card p-8 rounded-3xl space-y-6">
